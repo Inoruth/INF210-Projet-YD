@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments :: head('Job Management Portal')"></head>
+<body>
+
+<nav th:replace="fragments :: navbar"></nav>
+
+<div class="container">
+    <header th:replace="fragments :: pageHeader('Job Management Portal', 'Connecting Excellence with Opportunity')"></header>
+
+    <ul th:replace="fragments :: mainNavigation('active', null, null, null, null, null, null)"></ul>
+
+    <div class="container">
+        <div class="row">
+            <div class="col-md-8 mx-auto">
+                <!-- Message when user IS logged in -->
+                <div th:if="${session.userMail != null && #ctx.session.containsKey('userType')}">
+                    <div class="alert alert-success mb-4">
+                        <h4>Welcome back, <span th:text="${session.userMail}"></span>!</h4>
+                        <p>Account type: <strong th:text="${session.userType}"></strong></p>
+                    </div>
+                    
+                    <!-- Admin Menu -->
+                    <div th:if="${session.userType == 'admin'}" class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Admin Tools</h5>
+                            <ul class="list-group">
+                                <li class="list-group-item"><a href="/adduser" class="btn btn-sm btn-primary">Add a new user</a></li>
+                                <li class="list-group-item"><a href="/manageusers" class="btn btn-sm btn-primary">Manage users</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <!-- Company Menu -->
+                    <div th:if="${session.userType == 'company'}" class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Company Account</h5>
+                            <ul class="list-group">
+                                <li class="list-group-item"><a href="/publishjoboffer" class="btn btn-sm btn-primary">Publish a new job offer</a></li>
+                                <li class="list-group-item">
+                                    <a th:href="@{/managemyoffers/{mail}(mail=${session.userMail})}" class="btn btn-sm btn-primary">Manage my offers</a>
+                                </li>
+                                <li class="list-group-item">
+                                    <a th:href="@{/managemymessages/{mail}(mail=${session.userMail})}" class="btn btn-sm btn-primary">Check my messages</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <!-- Applicant Menu -->
+                    <div th:if="${session.userType == 'applicant'}" class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Applicant Account</h5>
+                            <ul class="list-group">
+                                <li class="list-group-item"><a href="/publishapplication" class="btn btn-sm btn-primary">Publish a new application</a></li>
+                                <li class="list-group-item">
+                                    <a th:href="@{/managemyapplications/{mail}(mail=${session.userMail})}" class="btn btn-sm btn-primary">Manage my applications</a>
+                                </li>
+                                <li class="list-group-item">
+                                    <a th:href="@{/managemymessages/{mail}(mail=${session.userMail})}" class="btn btn-sm btn-primary">Check my messages</a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Message when user is NOT logged in -->
+                <div th:if="${session.userMail == null}">
+                    <div class="alert alert-warning mb-4">
+                        <h4>Welcome to Job Management Portal!</h4>
+                        <p>You are not logged in. Please <a href="#" data-bs-toggle="modal" data-bs-target="#loginModal" class="alert-link"><strong>authenticate</strong></a> to publish content.</p>
+                    </div>
+                    
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">As a visitor</h5>
+                            <ul>
+                                <li>Explore job offers and applications</li>
+                                <li>Browse professional sectors and qualification levels</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<div th:replace="fragments :: loginModal"></div>
+
+<th:block th:replace="fragments :: scripts"></th:block>
+</body>
+</html>

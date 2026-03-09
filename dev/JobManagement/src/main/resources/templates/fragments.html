@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<!-- ============================================
+     FRAGMENTS FOR REUSE ACROSS PAGES
+     ============================================ -->
+
+<!-- HEAD FRAGMENT: CSS links and meta tags -->
+<head th:fragment="head(pageTitle)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${pageTitle} + ' | Job Management'">Job Management</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/jobmngt.css">
+    <script src="/js/jobmngt.js"></script>
+</head>
+
+<!-- NAVBAR FRAGMENT: Navigation with authentication -->
+<nav th:fragment="navbar" class="navbar navbar-expand-lg sticky-top mb-4">
+    <div class="container">
+        <a class="navbar-brand" href="/">IMT Atlantique <span style="color: var(--imt-light-blue);">Jobs</span></a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <!-- Login button (shown when NOT logged in) -->
+                <li class="nav-item" th:if="${session.userMail == null}">
+                    <a class="nav-link btn btn-outline-primary px-4 ms-lg-3" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">Authentication</a>
+                </li>
+                
+                <!-- User info (shown when logged in) -->
+                <li class="nav-item" th:if="${session.userMail != null}">
+                    <a th:href="@{/modifyuser/{mail}(mail=${session.userMail})}" class="nav-link text-success" th:text="${session.userMail} + ' (' + ${session.userType} + ')'"></span>
+                </li>
+                
+                <!-- Logout button (shown when logged in) -->
+                <li class="nav-item" th:if="${session.userMail != null}">
+                    <form action="/logout" method="POST" style="display: inline;">
+                        <button type="submit" class="nav-link btn btn-outline-danger px-4 ms-lg-2" style="border: none; background: none;">Logout</button>
+                    </form>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- PAGE HEADER FRAGMENT: Main title and description -->
+<header th:fragment="pageHeader(title, subtitle)" class="mb-5 text-center">
+    <h1 th:text="${title}">Job Management Portal</h1>
+    <p class="text-muted" th:text="${subtitle}">Connecting Excellence with Opportunity</p>
+</header>
+
+<!-- MAIN NAVIGATION FRAGMENT: Tab navigation menu -->
+<ul th:fragment="mainNavigation(homactive, companiesactive, applicantsactive, jobsactive, applicationsactive, sectorsactive, qualificationsactive)" class="nav nav-tabs mb-4" id="jobTab" role="tablist">
+    <li class="nav-item">
+        <a class="nav-link" th:classappend="${homactive}" href="/">Home</a>
+    </li>
+      <li class="nav-item">
+        <a class="nav-link" th:classappend="${companiesactive}" href="/allcompanies">Companies</a>
+    </li>
+     <li class="nav-item">
+        <a class="nav-link" th:classappend="${applicantsactive}" href="/allapplicants">Applicants</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" th:classappend="${jobsactive}" href="/alljobs">Job Offers</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" th:classappend="${applicationsactive}" href="/allapplications">Applications</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" th:classappend="${sectorsactive}" href="/allsectors">Sectors</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" th:classappend="${qualificationsactive}" href="/allqualifications">Qualification levels</a>
+    </li>
+</ul>
+
+<!-- LOGIN MODAL FRAGMENT: Reusable login modal -->
+<div th:fragment="loginModal" class="modal fade" id="loginModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Authentication</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="loginForm" onsubmit="return handleLogin(event);">
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" class="form-control" id="email" name="mail" placeholder="Email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="password" name="password" placeholder="Password" required>
+                    </div>
+                    <div id="loginMessage" class="alert d-none"></div>
+                    <button type="submit" class="btn btn-imt w-100">Sign In</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FOOTER FRAGMENT: Page footer -->
+<footer th:fragment="footer" class="bg-light text-center py-4 mt-5 border-top">
+    <div class="container">
+        <p class="text-muted mb-0">
+            &copy; 2026 IMT Atlantique - Job Management Portal. All rights reserved.
+        </p>
+    </div>
+</footer>
+
+<!-- BOOTSTRAP SCRIPTS FRAGMENT: JavaScript libraries -->
+<th:block th:fragment="scripts">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</th:block>
+
+</html>

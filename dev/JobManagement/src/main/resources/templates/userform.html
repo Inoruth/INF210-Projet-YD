@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments :: head('Register New User')"></head>
+<body>
+
+<nav th:replace="fragments :: navbar"></nav>
+
+<div class="container">
+    <header th:replace="fragments :: pageHeader('Register New User', 'Create your account to get started')"></header>
+
+    <ul th:replace="fragments :: mainNavigation('active',null, null,null, null, null, null)"></ul>
+    <div class="row">
+        <div class="col-md-8 col-lg-6 mx-auto mt-5">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Register New User</h4>
+                </div>
+                <div class="card-body">
+                    <form id="userForm" action="/adduserdata" method="POST">
+                        
+                        <!-- Email field -->
+                        <div class="mb-3">
+                            <label for="mail" class="form-label">Email Address <span class="text-danger">*</span></label>
+                            <input 
+                                type="email" 
+                                class="form-control" 
+                                id="mail" 
+                                name="mail" 
+                                placeholder="e.g., user@company.fr" 
+                                required>
+                            <small class="form-text text-muted">We'll never share your email with anyone else.</small>
+                        </div>
+
+                        <!-- Password field -->
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
+                            <input 
+                                type="password" 
+                                class="form-control" 
+                                id="password" 
+                                name="password" 
+                                placeholder="Minimum 3 characters" 
+                                minlength="3"
+                                required>
+                            <small class="form-text text-muted">Password must be at least 3 characters long.</small>
+                        </div>
+
+                        <!-- Confirm Password field -->
+                        <div class="mb-3">
+                            <label for="confirmPassword" class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                            <input 
+                                type="password" 
+                                class="form-control" 
+                                id="confirmPassword" 
+                                name="confirmPassword" 
+                                placeholder="Re-enter your password" 
+                                required>
+                        </div>
+
+                        <!-- User Type radio buttons -->
+                        <div class="mb-3">
+                            <label class="form-label">Account Type <span class="text-danger">*</span></label>
+                            <div class="form-check">
+                                <input 
+                                    class="form-check-input" 
+                                    type="radio" 
+                                    id="typeCompany" 
+                                    name="usertype" 
+                                    value="company" 
+                                    required>
+                                <label class="form-check-label" for="typeCompany">
+                                    Company
+                                </label>
+                                <small class="d-block text-muted">For companies posting job offers</small>
+                            </div>
+                            <div class="form-check mt-2">
+                                <input 
+                                    class="form-check-input" 
+                                    type="radio" 
+                                    id="typeApplicant" 
+                                    name="usertype" 
+                                    value="applicant" 
+                                    required>
+                                <label class="form-check-label" for="typeApplicant">
+                                    Applicant
+                                </label>
+                                <small class="d-block text-muted">For job applicants</small>
+                            </div>
+                        </div>
+
+                        <!-- Submit button -->
+                        <button type="submit" class="btn btn-primary w-100 mb-2">Register</button>
+                        <a href="/" class="btn btn-secondary w-100">Cancel</a>
+                    </form>
+
+                    <!-- Message div for feedback -->
+                    <div id="registrationMessage" class="alert d-none mt-3"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Login modal for users already logged in -->
+<div th:replace="fragments :: loginModal"></div>
+
+<th:block th:replace="fragments :: scripts"></th:block>
+</body>
+</html>
+

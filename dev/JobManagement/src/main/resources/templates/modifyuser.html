@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments :: head('Modify User')"></head>
+<body>
+
+<nav th:replace="fragments :: navbar"></nav>
+
+<div class="container">
+    <header th:replace="fragments :: pageHeader('Modify User', 'Update your user information')"></header>
+
+    <ul th:replace="fragments :: mainNavigation('active', null, null, null, null, null, null)"></ul>
+    <div class="row">
+        <div class="col-md-8 col-lg-6 mx-auto mt-5">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Modify User</h4>
+                </div>
+                <div class="card-body">
+                    <form id="userForm" action="/modifyuserdata" method="POST">
+                        
+                        <!-- Email field -->
+                        <div class="mb-3">
+                            <label for="mail" class="form-label">Email Address <span class="text-danger">*</span></label>
+                            <input 
+                                type="email" 
+                                class="form-control" 
+                                id="mail" 
+                                name="mail" 
+                                placeholder="e.g., user@company.fr" 
+                                readonly="readonly"
+                                required
+                                th:value="${user.mail}">
+                            <small class="form-text text-muted">We'll never share your email with anyone else.</small>
+                        </div>
+
+                        <!-- Password field -->
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password <span class="text-danger">*</span></label>
+                            <input 
+                                type="password" 
+                                class="form-control" 
+                                id="password" 
+                                name="password" 
+                                placeholder="Minimum 3 characters" 
+                                minlength="3"
+                                required
+                                >
+                            <small class="form-text text-muted">Password must be at least 3 characters long.</small>
+                        </div>
+
+                        <!-- Confirm Password field -->
+                        <div class="mb-3">
+                            <label for="confirmPassword" class="form-label">Confirm Password <span class="text-danger">*</span></label>
+                            <input 
+                                type="password" 
+                                class="form-control" 
+                                id="confirmPassword" 
+                                name="confirmPassword" 
+                                placeholder="Re-enter your password" 
+                                required
+                               >
+                        </div>
+
+                        <!-- Submit button -->
+                        <button type="submit" class="btn btn-primary w-100 mb-2">Update User</button>
+                        <a href="/" class="btn btn-secondary w-100">Cancel</a>
+                    </form>
+
+                    <!-- Message div for feedback -->
+                    <div id="registrationMessage" class="alert d-none mt-3"></div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Login modal for users already logged in -->
+<div th:replace="fragments :: loginModal"></div>
+
+<th:block th:replace="fragments :: scripts"></th:block>
+</body>
+</html>
+

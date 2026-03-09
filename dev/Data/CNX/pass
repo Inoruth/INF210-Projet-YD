@@ -1,0 +1,5 @@
+serv_postgres:5432:inf210_db:pguser:pgpwd
+serv_postgres:5432:comrec_db:pguser:pgpwd
+serv_postgres:5432:gestpers:pguser:pgpwd
+serv_postgres:5432:filrouge_db:pguser:pgpwd
+serv_postgres:5432:bandgateway_db:pguser:pgpwd

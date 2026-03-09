@@ -1,0 +1,43 @@
+services:
+  db:
+    container_name: serv_postgres_cn
+    hostname: serv_postgres
+    image: postgres
+    environment:
+      POSTGRES_USER: pguser
+      POSTGRES_PASSWORD: pgpwd
+      POSTGRES_MULTIPLE_DATABASES: "jobmanagement_db,/docker-entrypoint-initdb.d/SQL_Scripts/create_db_jobmanagement.sql"
+    ports:
+      - "5432:5432"
+    networks:
+      vnet_inf210:
+        ipv4_address: 10.5.0.8
+    volumes:
+      - ./Data/:/docker-entrypoint-initdb.d/
+   
+       
+  pgadmin:
+    container_name: pgadmin4_cn
+    hostname: serv_pgadmin4
+    image: dpage/pgadmin4
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: pguser@admin.com
+      PGADMIN_DEFAULT_PASSWORD: pgpwd
+    ports:
+      - "5051:80"
+    networks:
+      vnet_inf210:
+        ipv4_address: 10.5.0.7
+    volumes: 
+      - ./Data/CNX/servers.json:/pgadmin4/servers.json
+      - ./Data/CNX/pass:/pgadmin4/pgpass
+    depends_on:
+      - "db"
+
+networks:
+  vnet_inf210:
+    driver: bridge
+    ipam:
+     config:
+       - subnet: 10.5.0.0/16

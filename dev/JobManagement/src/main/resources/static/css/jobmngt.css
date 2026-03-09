@@ -1,0 +1,43 @@
+:root {
+    --imt-blue: #00425F;
+    --imt-light-blue: #00968F;
+    --imt-gray: #f4f4f4;
+}
+body {
+    font-family: 'Open Sans', sans-serif;
+    background-color: var(--imt-gray);
+}
+h1, h2, h3, .navbar-brand {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 700;
+    color: var(--imt-blue);
+}
+.navbar {
+    background-color: white;
+    border-bottom: 4px solid var(--imt-light-blue);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.btn-imt {
+    background-color: var(--imt-blue);
+    color: white;
+    border-radius: 0;
+    padding: 10px 25px;
+}
+.btn-imt:hover {
+    background-color: var(--imt-light-blue);
+    color: white;
+}
+.card {
+    border: none;
+    border-left: 5px solid var(--imt-blue);
+    transition: transform 0.2s;
+}
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+.nav-tabs .nav-link.active {
+    color: var(--imt-blue);
+    border-bottom: 3px solid var(--imt-blue);
+    font-weight: bold;
+}

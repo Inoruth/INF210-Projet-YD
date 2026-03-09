@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments :: head('Qualification Levels')"></head>
+<body>
+
+<nav th:replace="fragments :: navbar"></nav>
+
+<div class="container">
+    <header th:replace="fragments :: pageHeader('Qualification Levels', 'List of all qualification levels')"></header>
+
+    <ul th:replace="fragments :: mainNavigation(null, null, null, null, null, null, 'active')"></ul>
+    
+
+     <div class="row">
+        <div class="col-md-8 col-lg-6 mx-auto mt-5">
+             <div class="card-body">
+                    <h5 class="card-title">All Qualification Levels</h5>
+                    <ul th:each="qualificationLevel : ${qualificationLevels}" class="list-group shadow-sm">
+                        <li class="list-group-item d-flex justify-content-between align-items-center" th:text="${qualificationLevel.label}"></li>
+                    </ul>
+                </div>
+             </div>
+        </div>
+     </div>
+</div>
+
+            
+<!-- Login modal for users already logged in -->
+<div th:replace="fragments :: loginModal"></div>
+
+<th:block th:replace="fragments :: scripts"></th:block>
+</body>
+</html>

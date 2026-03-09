@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments :: head('Qualification Levels')"></head>
+<body>
+
+<nav th:replace="fragments :: navbar"></nav>
+
+<div class="container">
+    <header th:replace="fragments :: pageHeader('Manage Users', 'List of all registered users')"></header>
+
+    <ul th:replace="fragments :: mainNavigation('active', null, null, null, null, null, null)"></ul>
+    
+    <!-- Success/Error Message Alert -->
+    <div th:if="${param.success != null}" class="alert alert-success alert-dismissible fade show mt-4" role="alert">
+        <strong>Success!</strong>
+        <span th:switch="${param.success[0]}">
+            <span th:case="'user-deleted'">User has been deleted successfully.</span>
+            <span th:case="'user-updated'">User has been updated successfully.</span>
+            <span th:case="'user-created'">User has been created successfully.</span>
+            <span th:case="*">Operation completed successfully.</span>
+        </span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <div th:if="${param.error != null}" class="alert alert-danger alert-dismissible fade show mt-4" role="alert">
+        <strong>Error!</strong>
+        <span th:switch="${param.error[0]}">
+            <span th:case="'user-not-found'">User not found.</span>
+            <span th:case="'cannot-delete-self'">You cannot delete your own account.</span>
+            <span th:case="*">An error occurred.</span>
+        </span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    
+
+     <div class="row">
+        <div class="col-md-8 col-lg-6 mx-auto mt-5">
+             <div class="card-body">
+                    <h5 class="card-title">All registered users</h5>
+                    <table class="table table-striped table-hover">
+                        <thead class="table-primary">
+                            <tr>
+                                <th>Email</th>
+                                <th>User Type</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="user : ${users}">
+                                <td th:text="${user.mail}"></td>
+                                <td th:text="${user.usertype}"></td>
+                                <td>
+                                    <span th:if="${user.mail == session.userMail}" class="text-muted+63">(You)</span>
+                                    <span th:if="${user.mail != session.userMail}" class="text-muted">
+                                    <form action="/deleteuser" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this user?');">
+                                        <input type="hidden" name="mail" th:value="${user.mail}">
+                                        <button type="submit" class="btn btn-sm btn-danger" title="Delete user">
+                                            <i class="bi bi-trash">🗑️</i> Delete
+                                        </button>
+                                    </form>
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+             </div>
+        </div>
+     </div>
+</div>
+
+            
+<!-- Login modal for users already logged in -->
+<div th:replace="fragments :: loginModal"></div>
+
+<th:block th:replace="fragments :: scripts"></th:block>
+</body>
+</html>
