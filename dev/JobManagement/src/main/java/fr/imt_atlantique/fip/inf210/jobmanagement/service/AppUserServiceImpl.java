@@ -1,25 +1,27 @@
 package fr.imt_atlantique.fip.inf210.jobmanagement.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import fr.imt_atlantique.fip.inf210.jobmanagement.entity.AppUser;
-import fr.imt_atlantique.fip.inf210.jobmanagement.repository.AppUserJpaRepository;
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import fr.imt_atlantique.fip.inf210.jobmanagement.entity.AppUser;
+import fr.imt_atlantique.fip.inf210.jobmanagement.repository.AppUserJpaRepository;
 
 @Service
 public class AppUserServiceImpl implements AppUserService {
 
-    @Autowired
     private final AppUserJpaRepository appUserRepository;
 
+    @Autowired
     public AppUserServiceImpl(AppUserJpaRepository appUserRepository) {
         this.appUserRepository = appUserRepository;
     }
 
     @Override
     public Optional<AppUser> findByMail(String mail) {
-        return appUserRepository.findById(mail);
+        return appUserRepository.findByMail(mail);
     }
 
     @Override
@@ -29,7 +31,7 @@ public class AppUserServiceImpl implements AppUserService {
 
     @Override
     public void deleteByMail(String mail) {
-        appUserRepository.deleteById(mail);
+        appUserRepository.findByMail(mail).ifPresent(appUserRepository::delete);
     }
 
     @Override

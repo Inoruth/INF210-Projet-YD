@@ -4,13 +4,15 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 
 
 @Entity
-@Table(name = "appuser")
+@Table(name = "appusers")
 public class AppUser {
     
     public enum UserType {
@@ -18,13 +20,16 @@ public class AppUser {
     }
     
     @Id
-    @Column(length = 100)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
+    @Column(nullable = false, unique = true, length = 100)
     private String mail;
     
-    @Column(nullable = false, length = 100)
+    @Column(nullable = false, length = 255)
     private String password;
     
-    @Column(nullable = false, length = 20)
+    @Column(name = "usertype", nullable = false, length = 20)
     @Enumerated(EnumType.STRING)
     private UserType usertype;
     
@@ -37,6 +42,14 @@ public class AppUser {
         this.mail = mail;
         this.password = password;
         this.usertype = usertype;
+    }
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
     }
     
     // Getters and Setters
@@ -67,7 +80,8 @@ public class AppUser {
     @Override
     public String toString() {
         return "AppUser{" +
-                "mail='" + mail + '\'' +
+                "id=" + id +
+                ", mail='" + mail + '\'' +
                 ", usertype=" + usertype +
                 '}';
     }

@@ -8,7 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "qualificationlevel") 
+@Table(name = "qualificationlevels")
 public class QualificationLevel {
     
     @Id
@@ -17,6 +17,9 @@ public class QualificationLevel {
     
     @Column(nullable = false, unique = true, length = 50)
     private String label;
+
+    @Column(unique = true)
+    private Short rank;
     
     // Default constructor
     public QualificationLevel() {
@@ -25,6 +28,11 @@ public class QualificationLevel {
     // Constructor with label
     public QualificationLevel(String label) {
         this.label = label;
+    }
+
+    public QualificationLevel(String label, Short rank) {
+        this.label = label;
+        this.rank = rank;
     }
     
     // Getters and Setters
@@ -43,12 +51,21 @@ public class QualificationLevel {
     public void setLabel(String label) {
         this.label = label;
     }
+
+    public Short getRank() {
+        return rank;
+    }
+
+    public void setRank(Short rank) {
+        this.rank = rank;
+    }
     
     @Override
     public String toString() {
         return "QualificationLevel{" +
                 "id=" + id +
                 ", label='" + label + '\'' +
+            ", rank=" + rank +
                 '}';
     }
 }
