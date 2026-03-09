@@ -1,27 +1,31 @@
 package fr.imt_atlantique.fip.inf210.jobmanagement.controller;
 
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.http.MediaType;
-
-import fr.imt_atlantique.fip.inf210.jobmanagement.entity.AppUser;
-
-import java.util.Map;
-import java.util.Optional;
-import fr.imt_atlantique.fip.inf210.jobmanagement.service.AppUserService;
-import jakarta.servlet.http.HttpSession;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
+
+import fr.imt_atlantique.fip.inf210.jobmanagement.entity.AppUser;
+import fr.imt_atlantique.fip.inf210.jobmanagement.entity.Candidate;
+import fr.imt_atlantique.fip.inf210.jobmanagement.entity.Company;
+import fr.imt_atlantique.fip.inf210.jobmanagement.repository.CandidateJpaRepository;
+import fr.imt_atlantique.fip.inf210.jobmanagement.repository.CompanyJpaRepository;
+import fr.imt_atlantique.fip.inf210.jobmanagement.service.AppUserService;
+import jakarta.servlet.http.HttpSession;
 
 
 
@@ -30,9 +34,17 @@ import org.springframework.web.servlet.ModelAndView;
 
 @Controller
 public class AppUserController {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AppUserController.class);
     
     @Autowired
     private AppUserService appUserService;
+
+    @Autowired
+    private CompanyJpaRepository companyRepository;
+
+    @Autowired
+    private CandidateJpaRepository candidateRepository;
 
 
     @PostMapping("/login")
@@ -99,29 +111,29 @@ public class AppUserController {
         try {
             // Validate inputs
             if (mail == null || mail.trim().isEmpty()) {
-                System.out.println("Error: Email is required");
+                LOGGER.warn("User creation failed: email is required");
                 return "redirect:/adduser?error=email-required";
             }
             
             if (password == null || password.length() < 3) {
-                System.out.println("Error: Password must be at least 3 characters");
+                LOGGER.warn("User creation failed: password too short for mail={}", mail);
                 return "redirect:/adduser?error=password-short";
             }
             
             if (!password.equals(confirmPassword)) {
-                System.out.println("Error: Passwords do not match");
+                LOGGER.warn("User creation failed: password mismatch for mail={}", mail);
                 return "redirect:/adduser?error=passwords-mismatch";
             }
             
             if (usertype == null || (!usertype.equals("company") && !usertype.equals("applicant"))) {
-                System.out.println("Error: Invalid user type");
+                LOGGER.warn("User creation failed: invalid usertype={} for mail={}", usertype, mail);
                 return "redirect:/adduser?error=invalid-usertype";
             }
             
             // Check if user already exists
             Optional<AppUser> existing = appUserService.findByMail(mail);
             if (existing.isPresent()) {
-                System.out.println("Error: User with this email already exists");
+                LOGGER.warn("User creation failed: email already exists mail={}", mail);
                 return "redirect:/adduser?error=email-exists";
             }
             
@@ -130,21 +142,37 @@ public class AppUserController {
             
             // Save to database
             AppUser savedUser = appUserService.save(newUser);
-            System.out.println("User saved successfully: " + savedUser);
+
+            if (savedUser.getUsertype() == AppUser.UserType.company) {
+                companyRepository.save(new Company(
+                        savedUser,
+                        deriveDefaultProfileName(savedUser.getMail(), 100),
+                        null,
+                        null
+                ));
+            } else if (savedUser.getUsertype() == AppUser.UserType.applicant) {
+                candidateRepository.save(new Candidate(
+                        savedUser,
+                        deriveDefaultProfileName(savedUser.getMail(), 50),
+                        null,
+                        null
+                ));
+            }
+
+            LOGGER.info("User created successfully mail={} type={}", savedUser.getMail(), savedUser.getUsertype());
             
             // Redirect to home page with success message
             return "redirect:/manageusers?success=user-created";
             
         } catch (Exception e) {
-            System.out.println("Error processing user data: " + e.getMessage());
-            e.printStackTrace();
+            LOGGER.error("Error processing user data for mail={}: {}", mail, e.getMessage(), e);
             return "redirect:/adduser?error=server-error";
         }
     }
     
 
     @PostMapping("/deleteuser")
-    public String deleteUser(@RequestParam("mail") String mail, HttpSession session) {
+    public String deleteUser(@RequestParam("mail") String mail) {
         // Delete the user
         appUserService.deleteByMail(mail);
         return "redirect:/manageusers?success=user-deleted";
@@ -179,12 +207,12 @@ public class AppUserController {
         try {
             // Validate inputs
             if (password == null || password.length() < 3) {
-                System.out.println("Error: Password must be at least 3 characters");
+                LOGGER.warn("User update failed: password too short for mail={}", mail);
                 return "redirect:/modifyuser/" + mail + "?error=password-short";
             }
 
             if (!password.equals(confirmPassword)) {
-                System.out.println("Error: Passwords do not match");
+                LOGGER.warn("User update failed: password mismatch for mail={}", mail);
                 return "redirect:/modifyuser/" + mail + "?error=passwords-mismatch";
             }
 
@@ -196,20 +224,37 @@ public class AppUserController {
               
                 // Save to database
                 AppUser savedUser = appUserService.save(updatedUser);
-                System.out.println("Updated user successfully: " + savedUser);
+                LOGGER.info("User updated successfully mail={}", savedUser.getMail());
 
                 // Redirect to manage users page with success message
                 return "redirect:/manageusers?success=user-updated";
             } else {
-                System.out.println("Error: User does not exist");
+                LOGGER.warn("User update failed: user not found mail={}", mail);
                 return "redirect:/manageusers?error=user-not-found";
             }
             
         } catch (Exception e) {
-            System.out.println("Error processing modified user data: " + e.getMessage());
-            e.printStackTrace();
+            LOGGER.error("Error processing modified user data for mail={}: {}", mail, e.getMessage(), e);
             return "redirect:/manageusers?error=server-error";
         }
+    }
+
+    private String deriveDefaultProfileName(String mail, int maxLength) {
+        if (mail == null || mail.isBlank()) {
+            return "unknown";
+        }
+
+        int atIndex = mail.indexOf('@');
+        String baseName = mail;
+        if (atIndex > 0) {
+            baseName = mail.substring(0, atIndex);
+        }
+
+        if (baseName.length() > maxLength) {
+            return baseName.substring(0, maxLength);
+        }
+
+        return baseName;
     }
     
 }

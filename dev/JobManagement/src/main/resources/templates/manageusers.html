@@ -50,7 +50,7 @@
                                 <td th:text="${user.mail}"></td>
                                 <td th:text="${user.usertype}"></td>
                                 <td>
-                                    <span th:if="${user.mail == session.userMail}" class="text-muted+63">(You)</span>
+                                    <span th:if="${user.mail == session.userMail}" class="text-muted">(You)</span>
                                     <span th:if="${user.mail != session.userMail}" class="text-muted">
                                     <form action="/deleteuser" method="POST" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this user?');">
                                         <input type="hidden" name="mail" th:value="${user.mail}">
