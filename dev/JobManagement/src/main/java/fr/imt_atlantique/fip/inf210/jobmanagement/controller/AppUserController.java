@@ -115,7 +115,7 @@ public class AppUserController {
                 return "redirect:/adduser?error=email-required";
             }
             
-            if (password == null || password.length() < 3) {
+            if (password == null || password.length() < 4) {
                 LOGGER.warn("User creation failed: password too short for mail={}", mail);
                 return "redirect:/adduser?error=password-short";
             }
@@ -206,7 +206,7 @@ public class AppUserController {
 
         try {
             // Validate inputs
-            if (password == null || password.length() < 3) {
+            if (password == null || password.length() < 4) {
                 LOGGER.warn("User update failed: password too short for mail={}", mail);
                 return "redirect:/modifyuser/" + mail + "?error=password-short";
             }

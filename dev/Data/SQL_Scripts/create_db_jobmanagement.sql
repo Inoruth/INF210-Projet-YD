@@ -44,7 +44,7 @@ create table appusers (
                           password varchar(255) not null,
                           usertype varchar(20)  not null,
 
-                          constraint ck_password_length check (length(password) >= 3),
+                          constraint ck_password_length check (length(password) >= 4),
                           constraint ck_usertype check (usertype in ('admin','company','applicant')),
                           constraint ck_mail_format check (mail ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$')
     );

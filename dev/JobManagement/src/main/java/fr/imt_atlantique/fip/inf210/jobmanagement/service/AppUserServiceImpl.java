@@ -31,7 +31,9 @@ public class AppUserServiceImpl implements AppUserService {
 
     @Override
     public void deleteByMail(String mail) {
-        appUserRepository.findByMail(mail).ifPresent(appUserRepository::delete);
+        appUserRepository.findByMail(mail)
+                .filter(user -> user.getUsertype() != AppUser.UserType.admin)
+                .ifPresent(appUserRepository::delete);
     }
 
     @Override

@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -40,6 +41,16 @@ class AppUserServiceTest {
         service.deleteByMail("delete.test@imt-atlantique.fr");
 
         verify(repository, times(1)).delete(user);
+    }
+
+    @Test
+    void shouldNotDeleteAdminUser() {
+        AppUser admin = new AppUser("admin.test@imt-atlantique.fr", "pwd", AppUser.UserType.admin);
+        when(repository.findByMail("admin.test@imt-atlantique.fr")).thenReturn(Optional.of(admin));
+
+        service.deleteByMail("admin.test@imt-atlantique.fr");
+
+        verify(repository, never()).delete(admin);
     }
 
     @Test
