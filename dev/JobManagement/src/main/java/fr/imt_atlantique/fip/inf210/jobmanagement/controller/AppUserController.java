@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 
 import fr.imt_atlantique.fip.inf210.jobmanagement.entity.AppUser;
@@ -95,7 +97,8 @@ public class AppUserController {
     }
 
     @GetMapping("/adduser")
-    public String getAddUserForm(){
+    public String getAddUserForm(HttpSession session){
+        requireAdmin(session);
         return "userform.html";
     }
     
@@ -106,7 +109,10 @@ public class AppUserController {
             @RequestParam("mail") String mail,
             @RequestParam("password") String password,
             @RequestParam("confirmPassword") String confirmPassword,
-            @RequestParam("usertype") String usertype) {
+            @RequestParam("usertype") String usertype,
+            HttpSession session) {
+
+        requireAdmin(session);
 
         try {
             // Validate inputs
@@ -172,21 +178,27 @@ public class AppUserController {
     
 
     @PostMapping("/deleteuser")
-    public String deleteUser(@RequestParam("mail") String mail) {
+    public String deleteUser(@RequestParam("mail") String mail, HttpSession session) {
+        requireAdmin(session);
+
         // Delete the user
         appUserService.deleteByMail(mail);
         return "redirect:/manageusers?success=user-deleted";
     }
 
     @GetMapping("/manageusers")
-    public ModelAndView listUsersAndActions() {
+    public ModelAndView listUsersAndActions(HttpSession session) {
+        requireAdmin(session);
+
         ModelAndView mav = new ModelAndView("manageusers");
         mav.addObject("users", appUserService.findAll());
         return mav;
     }
     
     @GetMapping("/modifyuser/{mail}")
-    public ModelAndView getModifyUserForm(@PathVariable String mail) {
+    public ModelAndView getModifyUserForm(@PathVariable String mail, HttpSession session) {
+        requireSelfOrAdmin(session, mail);
+
         ModelAndView model = new ModelAndView("modifyuser");    
         Optional<AppUser> userOptional = appUserService.findByMail(mail);
         if (userOptional.isPresent()) {
@@ -202,7 +214,10 @@ public class AppUserController {
     public String processModifyUserData(
             @RequestParam("mail") String mail,
             @RequestParam("password") String password,
-            @RequestParam("confirmPassword") String confirmPassword) {
+            @RequestParam("confirmPassword") String confirmPassword,
+            HttpSession session) {
+
+        requireSelfOrAdmin(session, mail);
 
         try {
             // Validate inputs
@@ -255,6 +270,40 @@ public class AppUserController {
         }
 
         return baseName;
+    }
+
+    private void requireAdmin(HttpSession session) {
+        requireAuthenticated(session);
+
+        String userType = (String) session.getAttribute("userType");
+        if (!AppUser.UserType.admin.name().equalsIgnoreCase(userType)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admin access required");
+        }
+    }
+
+    private void requireSelfOrAdmin(HttpSession session, String targetMail) {
+        requireAuthenticated(session);
+
+        String sessionMail = (String) session.getAttribute("userMail");
+        String userType = (String) session.getAttribute("userType");
+        boolean isAdmin = AppUser.UserType.admin.name().equalsIgnoreCase(userType);
+
+        if (!isAdmin && !sessionMail.equalsIgnoreCase(targetMail)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot modify another user");
+        }
+    }
+
+    private void requireAuthenticated(HttpSession session) {
+        if (session == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
+        }
+
+        Object sessionMail = session.getAttribute("userMail");
+        Object userType = session.getAttribute("userType");
+        if (!(sessionMail instanceof String mail) || mail.isBlank()
+                || !(userType instanceof String type) || type.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
+        }
     }
     
 }
