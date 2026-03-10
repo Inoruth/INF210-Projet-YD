@@ -6,21 +6,29 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
+import org.mockito.InOrder;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import fr.imt_atlantique.fip.inf210.jobmanagement.entity.AppUser;
+import fr.imt_atlantique.fip.inf210.jobmanagement.entity.Company;
 import fr.imt_atlantique.fip.inf210.jobmanagement.repository.AppUserJpaRepository;
+import fr.imt_atlantique.fip.inf210.jobmanagement.repository.CandidateJpaRepository;
+import fr.imt_atlantique.fip.inf210.jobmanagement.repository.CompanyJpaRepository;
 import fr.imt_atlantique.fip.inf210.jobmanagement.service.AppUserService;
 import fr.imt_atlantique.fip.inf210.jobmanagement.service.AppUserServiceImpl;
 
 class AppUserServiceTest {
 
     private final AppUserJpaRepository repository = mock(AppUserJpaRepository.class);
-    private final AppUserService service = new AppUserServiceImpl(repository);
+    private final CompanyJpaRepository companyRepository = mock(CompanyJpaRepository.class);
+    private final CandidateJpaRepository candidateRepository = mock(CandidateJpaRepository.class);
+    private final AppUserService service = new AppUserServiceImpl(repository, companyRepository, candidateRepository);
 
     @Test
     void shouldFindByMail() {
@@ -37,10 +45,29 @@ class AppUserServiceTest {
     void shouldDeleteByMailWhenUserExists() {
         AppUser user = new AppUser("delete.test@imt-atlantique.fr", "pwd", AppUser.UserType.applicant);
         when(repository.findByMail("delete.test@imt-atlantique.fr")).thenReturn(Optional.of(user));
+        when(candidateRepository.findByAppUserMail("delete.test@imt-atlantique.fr")).thenReturn(Optional.empty());
 
         service.deleteByMail("delete.test@imt-atlantique.fr");
 
+        verify(candidateRepository, times(1)).findByAppUserMail("delete.test@imt-atlantique.fr");
         verify(repository, times(1)).delete(user);
+    }
+
+    @Test
+    void shouldDeleteCompanyProfileBeforeUser() {
+        AppUser user = new AppUser("company.delete@imt-atlantique.fr", "pwd", AppUser.UserType.company);
+        Company company = new Company();
+        company.setAppUser(user);
+
+        when(repository.findByMail("company.delete@imt-atlantique.fr")).thenReturn(Optional.of(user));
+        when(companyRepository.findByAppUserMail("company.delete@imt-atlantique.fr")).thenReturn(Optional.of(company));
+
+        service.deleteByMail("company.delete@imt-atlantique.fr");
+
+        InOrder inOrder = inOrder(companyRepository, repository);
+        inOrder.verify(companyRepository).findByAppUserMail("company.delete@imt-atlantique.fr");
+        inOrder.verify(companyRepository).delete(company);
+        inOrder.verify(repository).delete(user);
     }
 
     @Test
@@ -51,6 +78,7 @@ class AppUserServiceTest {
         service.deleteByMail("admin.test@imt-atlantique.fr");
 
         verify(repository, never()).delete(admin);
+        verifyNoInteractions(companyRepository, candidateRepository);
     }
 
     @Test

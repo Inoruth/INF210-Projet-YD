@@ -8,7 +8,11 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
 import fr.imt_atlantique.fip.inf210.jobmanagement.entity.AppUser;
+import fr.imt_atlantique.fip.inf210.jobmanagement.entity.Candidate;
+import fr.imt_atlantique.fip.inf210.jobmanagement.entity.Company;
 import fr.imt_atlantique.fip.inf210.jobmanagement.repository.AppUserJpaRepository;
+import fr.imt_atlantique.fip.inf210.jobmanagement.repository.CandidateJpaRepository;
+import fr.imt_atlantique.fip.inf210.jobmanagement.repository.CompanyJpaRepository;
 import fr.imt_atlantique.fip.inf210.jobmanagement.service.AppUserService;
 
 @SpringBootTest
@@ -20,6 +24,12 @@ class AppUserServiceIntegrationTest {
 
     @Autowired
     private AppUserJpaRepository appUserRepository;
+
+    @Autowired
+    private CompanyJpaRepository companyRepository;
+
+    @Autowired
+    private CandidateJpaRepository candidateRepository;
 
     @Test
     void shouldDeleteApplicantButKeepAdmin() {
@@ -39,5 +49,35 @@ class AppUserServiceIntegrationTest {
 
         assertTrue(appUserRepository.findByMail(admin.getMail()).isPresent());
         assertFalse(appUserRepository.findByMail(applicant.getMail()).isPresent());
+    }
+
+    @Test
+    void shouldDeleteCompanyUserWithProfile() {
+        AppUser companyUser = appUserRepository.save(new AppUser(
+                "company.integration@imt-atlantique.fr",
+                "pwd1234",
+                AppUser.UserType.company
+        ));
+        companyRepository.save(new Company(companyUser, "Integration Company", null, null));
+
+        appUserService.deleteByMail(companyUser.getMail());
+
+        assertFalse(appUserRepository.findByMail(companyUser.getMail()).isPresent());
+        assertTrue(companyRepository.findByAppUserMail(companyUser.getMail()).isEmpty());
+    }
+
+    @Test
+    void shouldDeleteApplicantUserWithProfile() {
+        AppUser candidateUser = appUserRepository.save(new AppUser(
+                "candidate.integration@imt-atlantique.fr",
+                "pwd1234",
+                AppUser.UserType.applicant
+        ));
+        candidateRepository.save(new Candidate(candidateUser, "IntegrationCandidate", null, null));
+
+        appUserService.deleteByMail(candidateUser.getMail());
+
+        assertFalse(appUserRepository.findByMail(candidateUser.getMail()).isPresent());
+        assertTrue(candidateRepository.findByAppUserMail(candidateUser.getMail()).isEmpty());
     }
 }
