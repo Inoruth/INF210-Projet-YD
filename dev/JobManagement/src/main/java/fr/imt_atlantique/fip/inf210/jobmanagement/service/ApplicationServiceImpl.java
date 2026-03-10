@@ -14,9 +14,12 @@ import fr.imt_atlantique.fip.inf210.jobmanagement.repository.ApplicationJpaRepos
 public class ApplicationServiceImpl implements ApplicationService {
 
     private final ApplicationJpaRepository applicationRepository;
+    private final AutomaticMessageService automaticMessageService;
 
-    public ApplicationServiceImpl(ApplicationJpaRepository applicationRepository) {
+    public ApplicationServiceImpl(ApplicationJpaRepository applicationRepository,
+                                  AutomaticMessageService automaticMessageService) {
         this.applicationRepository = applicationRepository;
+        this.automaticMessageService = automaticMessageService;
     }
 
     @Override
@@ -31,7 +34,14 @@ public class ApplicationServiceImpl implements ApplicationService {
 
     @Override
     public Application save(Application application) {
-        return applicationRepository.save(application);
+        boolean isNewApplication = application.getId() == null;
+        Application saved = applicationRepository.save(application);
+
+        if (isNewApplication) {
+            automaticMessageService.sendAutomaticMessagesForNewApplication(saved);
+        }
+
+        return saved;
     }
 
     @Override

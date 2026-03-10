@@ -14,9 +14,12 @@ import fr.imt_atlantique.fip.inf210.jobmanagement.repository.JobOfferJpaReposito
 public class JobOfferServiceImpl implements JobOfferService {
 
     private final JobOfferJpaRepository jobOfferRepository;
+    private final AutomaticMessageService automaticMessageService;
 
-    public JobOfferServiceImpl(JobOfferJpaRepository jobOfferRepository) {
+    public JobOfferServiceImpl(JobOfferJpaRepository jobOfferRepository,
+                               AutomaticMessageService automaticMessageService) {
         this.jobOfferRepository = jobOfferRepository;
+        this.automaticMessageService = automaticMessageService;
     }
 
     @Override
@@ -31,7 +34,14 @@ public class JobOfferServiceImpl implements JobOfferService {
 
     @Override
     public JobOffer save(JobOffer jobOffer) {
-        return jobOfferRepository.save(jobOffer);
+        boolean isNewOffer = jobOffer.getId() == null;
+        JobOffer saved = jobOfferRepository.save(jobOffer);
+
+        if (isNewOffer) {
+            automaticMessageService.sendAutomaticMessagesForNewOffer(saved);
+        }
+
+        return saved;
     }
 
     @Override
