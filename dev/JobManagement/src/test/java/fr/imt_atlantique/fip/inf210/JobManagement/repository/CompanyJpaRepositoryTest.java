@@ -7,16 +7,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 
 import fr.imt_atlantique.fip.inf210.jobmanagement.entity.AppUser;
 import fr.imt_atlantique.fip.inf210.jobmanagement.entity.Company;
 import fr.imt_atlantique.fip.inf210.jobmanagement.repository.AppUserJpaRepository;
 import fr.imt_atlantique.fip.inf210.jobmanagement.repository.CompanyJpaRepository;
 
-@SpringBootTest
-@Transactional
+@DataJpaTest
 class CompanyJpaRepositoryTest {
 
     @Autowired

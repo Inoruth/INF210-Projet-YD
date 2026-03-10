@@ -6,16 +6,14 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 
 import fr.imt_atlantique.fip.inf210.jobmanagement.entity.Admin;
 import fr.imt_atlantique.fip.inf210.jobmanagement.entity.AppUser;
 import fr.imt_atlantique.fip.inf210.jobmanagement.repository.AdminJpaRepository;
 import fr.imt_atlantique.fip.inf210.jobmanagement.repository.AppUserJpaRepository;
 
-@SpringBootTest
-@Transactional
+@DataJpaTest
 class AdminJpaRepositoryTest {
 
     @Autowired
