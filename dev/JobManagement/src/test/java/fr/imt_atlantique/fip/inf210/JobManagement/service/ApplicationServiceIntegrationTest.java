@@ -5,6 +5,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -21,6 +22,7 @@ import fr.imt_atlantique.fip.inf210.jobmanagement.repository.AppUserJpaRepositor
 import fr.imt_atlantique.fip.inf210.jobmanagement.repository.CandidateJpaRepository;
 import fr.imt_atlantique.fip.inf210.jobmanagement.repository.CompanyJpaRepository;
 import fr.imt_atlantique.fip.inf210.jobmanagement.repository.JobOfferJpaRepository;
+import fr.imt_atlantique.fip.inf210.jobmanagement.repository.MessageToApplicationJpaRepository;
 import fr.imt_atlantique.fip.inf210.jobmanagement.repository.QualificationLevelRepository;
 import fr.imt_atlantique.fip.inf210.jobmanagement.repository.SectorJpaRepository;
 import fr.imt_atlantique.fip.inf210.jobmanagement.service.ApplicationService;
@@ -49,6 +51,9 @@ class ApplicationServiceIntegrationTest {
 
     @Autowired
     private SectorJpaRepository sectorRepository;
+
+    @Autowired
+    private MessageToApplicationJpaRepository messageToApplicationRepository;
 
     @Test
     void shouldSearchApplicationsByCriteriaThroughService() {
@@ -104,6 +109,24 @@ class ApplicationServiceIntegrationTest {
 
         applicationService.deleteByIdAndCandidateId(application.getId(), owner.getId());
         assertFalse(applicationService.findById(application.getId()).isPresent());
+    }
+
+    @Test
+    void shouldSendAutomaticMessageWhenPublishingApplication() {
+        Candidate candidate = createCandidate("integration.app.auto.candidate@imt-atlantique.fr", "AutoCandidate");
+        Company company = createCompany("integration.app.auto.company@imt-atlantique.fr", "AutoCo");
+
+        Sector it = sectorRepository.save(new Sector("IT-App-Auto-Int"));
+        QualificationLevel level3 = qualificationLevelRepository.save(new QualificationLevel("L3-App-Auto-Int", (short) 3));
+        QualificationLevel level4 = qualificationLevelRepository.save(new QualificationLevel("L4-App-Auto-Int", (short) 4));
+
+        JobOffer offer = createOffer(company, level3, Set.of(it));
+        Application application = createApplication(candidate, level4, Set.of(it), "Auto CV");
+
+        var message = messageToApplicationRepository.findByApplicationIdAndJobOfferId(application.getId(), offer.getId());
+
+        assertTrue(message.isPresent());
+        assertTrue(message.get().getMessage().startsWith("Automatic message:"));
     }
 
     private Candidate createCandidate(String mail, String lastname) {

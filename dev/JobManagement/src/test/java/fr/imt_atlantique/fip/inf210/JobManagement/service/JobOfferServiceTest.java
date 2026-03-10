@@ -9,18 +9,21 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import fr.imt_atlantique.fip.inf210.jobmanagement.entity.JobOffer;
 import fr.imt_atlantique.fip.inf210.jobmanagement.repository.JobOfferJpaRepository;
+import fr.imt_atlantique.fip.inf210.jobmanagement.service.AutomaticMessageService;
 import fr.imt_atlantique.fip.inf210.jobmanagement.service.JobOfferService;
 import fr.imt_atlantique.fip.inf210.jobmanagement.service.JobOfferServiceImpl;
 
 class JobOfferServiceTest {
 
     private final JobOfferJpaRepository repository = mock(JobOfferJpaRepository.class);
-    private final JobOfferService service = new JobOfferServiceImpl(repository);
+    private final AutomaticMessageService automaticMessageService = mock(AutomaticMessageService.class);
+    private final JobOfferService service = new JobOfferServiceImpl(repository, automaticMessageService);
 
     @Test
     void shouldDeleteOnlyWhenOwnedByCompany() {
@@ -51,5 +54,29 @@ class JobOfferServiceTest {
 
         assertEquals(1, offers.size());
         verify(repository).searchByCriteria(eq(true), eq(sectorIds), eq((short) 4));
+    }
+
+    @Test
+    void shouldTriggerAutomaticMessagesWhenCreatingOffer() {
+        JobOffer newOffer = new JobOffer();
+        JobOffer savedOffer = new JobOffer();
+        savedOffer.setId(42);
+        when(repository.save(newOffer)).thenReturn(savedOffer);
+
+        JobOffer result = service.save(newOffer);
+
+        assertEquals(42, result.getId());
+        verify(automaticMessageService).sendAutomaticMessagesForNewOffer(savedOffer);
+    }
+
+    @Test
+    void shouldNotTriggerAutomaticMessagesWhenUpdatingOffer() {
+        JobOffer existingOffer = new JobOffer();
+        existingOffer.setId(10);
+        when(repository.save(existingOffer)).thenReturn(existingOffer);
+
+        service.save(existingOffer);
+
+        verify(automaticMessageService, never()).sendAutomaticMessagesForNewOffer(existingOffer);
     }
 }

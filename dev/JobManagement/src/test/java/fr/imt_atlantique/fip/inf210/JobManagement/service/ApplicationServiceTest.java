@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -16,11 +17,13 @@ import fr.imt_atlantique.fip.inf210.jobmanagement.entity.Application;
 import fr.imt_atlantique.fip.inf210.jobmanagement.repository.ApplicationJpaRepository;
 import fr.imt_atlantique.fip.inf210.jobmanagement.service.ApplicationService;
 import fr.imt_atlantique.fip.inf210.jobmanagement.service.ApplicationServiceImpl;
+import fr.imt_atlantique.fip.inf210.jobmanagement.service.AutomaticMessageService;
 
 class ApplicationServiceTest {
 
     private final ApplicationJpaRepository repository = mock(ApplicationJpaRepository.class);
-    private final ApplicationService service = new ApplicationServiceImpl(repository);
+    private final AutomaticMessageService automaticMessageService = mock(AutomaticMessageService.class);
+    private final ApplicationService service = new ApplicationServiceImpl(repository, automaticMessageService);
 
     @Test
     void shouldDeleteOnlyWhenOwnedByCandidate() {
@@ -51,5 +54,29 @@ class ApplicationServiceTest {
 
         assertEquals(1, applications.size());
         verify(repository).searchByCriteria(eq(true), eq(sectorIds), eq((short) 4));
+    }
+
+    @Test
+    void shouldTriggerAutomaticMessagesWhenCreatingApplication() {
+        Application newApplication = new Application();
+        Application savedApplication = new Application();
+        savedApplication.setId(24);
+        when(repository.save(newApplication)).thenReturn(savedApplication);
+
+        Application result = service.save(newApplication);
+
+        assertEquals(24, result.getId());
+        verify(automaticMessageService).sendAutomaticMessagesForNewApplication(savedApplication);
+    }
+
+    @Test
+    void shouldNotTriggerAutomaticMessagesWhenUpdatingApplication() {
+        Application existingApplication = new Application();
+        existingApplication.setId(7);
+        when(repository.save(existingApplication)).thenReturn(existingApplication);
+
+        service.save(existingApplication);
+
+        verify(automaticMessageService, never()).sendAutomaticMessagesForNewApplication(existingApplication);
     }
 }
