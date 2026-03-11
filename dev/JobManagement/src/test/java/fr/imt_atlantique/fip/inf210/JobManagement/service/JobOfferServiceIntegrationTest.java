@@ -16,6 +16,7 @@ import fr.imt_atlantique.fip.inf210.jobmanagement.entity.Application;
 import fr.imt_atlantique.fip.inf210.jobmanagement.entity.Candidate;
 import fr.imt_atlantique.fip.inf210.jobmanagement.entity.Company;
 import fr.imt_atlantique.fip.inf210.jobmanagement.entity.JobOffer;
+import fr.imt_atlantique.fip.inf210.jobmanagement.entity.MessageToOffer;
 import fr.imt_atlantique.fip.inf210.jobmanagement.entity.QualificationLevel;
 import fr.imt_atlantique.fip.inf210.jobmanagement.entity.Sector;
 import fr.imt_atlantique.fip.inf210.jobmanagement.repository.AppUserJpaRepository;
@@ -128,6 +129,13 @@ class JobOfferServiceIntegrationTest {
 
         assertTrue(message.isPresent());
         assertTrue(message.get().getMessage().startsWith("Automatic message:"));
+
+        offer.setTitle("Auto Offer Updated");
+        jobOfferService.save(offer);
+
+        List<MessageToOffer> companyMessages = messageToOfferRepository
+            .findByJobOfferCompanyIdOrderByPublicationdateDesc(company.getId());
+        assertEquals(1, companyMessages.size());
     }
 
     private Company createCompany(String mail, String denomination) {

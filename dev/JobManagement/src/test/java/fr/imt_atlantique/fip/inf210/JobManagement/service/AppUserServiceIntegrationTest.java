@@ -1,5 +1,6 @@
 package fr.imt_atlantique.fip.inf210.JobManagement.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
@@ -30,6 +31,40 @@ class AppUserServiceIntegrationTest {
 
     @Autowired
     private CandidateJpaRepository candidateRepository;
+
+    @Test
+    void shouldCreateCompanyDefaultProfileWithServiceMethod() {
+        AppUser companyUser = new AppUser(
+                "company.default.profile@imt-atlantique.fr",
+                "pwd1234",
+                AppUser.UserType.company
+        );
+
+        appUserService.saveWithDefaultProfile(companyUser);
+
+        assertTrue(companyRepository.findByAppUserMail(companyUser.getMail()).isPresent());
+        assertEquals(
+                "company.default.profile",
+                companyRepository.findByAppUserMail(companyUser.getMail()).get().getDenomination()
+        );
+    }
+
+    @Test
+    void shouldCreateApplicantDefaultProfileWithServiceMethod() {
+        AppUser applicantUser = new AppUser(
+                "applicant.default.profile@imt-atlantique.fr",
+                "pwd1234",
+                AppUser.UserType.applicant
+        );
+
+        appUserService.saveWithDefaultProfile(applicantUser);
+
+        assertTrue(candidateRepository.findByAppUserMail(applicantUser.getMail()).isPresent());
+        assertEquals(
+                "applicant.default.profile",
+                candidateRepository.findByAppUserMail(applicantUser.getMail()).get().getLastname()
+        );
+    }
 
     @Test
     void shouldDeleteApplicantButKeepAdmin() {

@@ -6,11 +6,13 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import fr.imt_atlantique.fip.inf210.jobmanagement.entity.Application;
 import fr.imt_atlantique.fip.inf210.jobmanagement.repository.ApplicationJpaRepository;
 
 @Service
+@Transactional(readOnly = true)
 public class ApplicationServiceImpl implements ApplicationService {
 
     private final ApplicationJpaRepository applicationRepository;
@@ -33,6 +35,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     }
 
     @Override
+    @Transactional
     public Application save(Application application) {
         boolean isNewApplication = application.getId() == null;
         Application saved = applicationRepository.save(application);
@@ -55,6 +58,7 @@ public class ApplicationServiceImpl implements ApplicationService {
     }
 
     @Override
+    @Transactional
     public void deleteByIdAndCandidateId(Integer id, Integer candidateId) {
         applicationRepository.findByIdAndCandidateId(id, candidateId).ifPresent(applicationRepository::delete);
     }

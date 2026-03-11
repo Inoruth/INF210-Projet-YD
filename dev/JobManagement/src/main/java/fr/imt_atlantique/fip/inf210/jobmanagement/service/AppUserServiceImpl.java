@@ -5,13 +5,17 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import fr.imt_atlantique.fip.inf210.jobmanagement.entity.AppUser;
+import fr.imt_atlantique.fip.inf210.jobmanagement.entity.Candidate;
+import fr.imt_atlantique.fip.inf210.jobmanagement.entity.Company;
 import fr.imt_atlantique.fip.inf210.jobmanagement.repository.AppUserJpaRepository;
 import fr.imt_atlantique.fip.inf210.jobmanagement.repository.CandidateJpaRepository;
 import fr.imt_atlantique.fip.inf210.jobmanagement.repository.CompanyJpaRepository;
 
 @Service
+@Transactional(readOnly = true)
 public class AppUserServiceImpl implements AppUserService {
 
     private final AppUserJpaRepository appUserRepository;
@@ -34,11 +38,37 @@ public class AppUserServiceImpl implements AppUserService {
     }
 
     @Override
+    @Transactional
     public AppUser save(AppUser user) {
         return appUserRepository.save(user);
     }
 
     @Override
+    @Transactional
+    public AppUser saveWithDefaultProfile(AppUser user) {
+        AppUser savedUser = appUserRepository.save(user);
+
+        if (savedUser.getUsertype() == AppUser.UserType.company) {
+            companyRepository.save(new Company(
+                    savedUser,
+                    deriveDefaultProfileName(savedUser.getMail(), 100),
+                    null,
+                    null
+            ));
+        } else if (savedUser.getUsertype() == AppUser.UserType.applicant) {
+            candidateRepository.save(new Candidate(
+                    savedUser,
+                    deriveDefaultProfileName(savedUser.getMail(), 50),
+                    null,
+                    null
+            ));
+        }
+
+        return savedUser;
+    }
+
+    @Override
+    @Transactional
     public void deleteByMail(String mail) {
         appUserRepository.findByMail(mail)
                 .ifPresent(user -> {
@@ -59,5 +89,23 @@ public class AppUserServiceImpl implements AppUserService {
     @Override
     public List<AppUser> findAll() {
         return appUserRepository.findAll();
+    }
+
+    private String deriveDefaultProfileName(String mail, int maxLength) {
+        if (mail == null || mail.isBlank()) {
+            return "unknown";
+        }
+
+        int atIndex = mail.indexOf('@');
+        String baseName = mail;
+        if (atIndex > 0) {
+            baseName = mail.substring(0, atIndex);
+        }
+
+        if (baseName.length() > maxLength) {
+            return baseName.substring(0, maxLength);
+        }
+
+        return baseName;
     }
 }
