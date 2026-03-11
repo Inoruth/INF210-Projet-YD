@@ -6,8 +6,6 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import static org.mockito.ArgumentMatchers.any;
 import org.mockito.InOrder;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
@@ -18,7 +16,6 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import fr.imt_atlantique.fip.inf210.jobmanagement.entity.AppUser;
-import fr.imt_atlantique.fip.inf210.jobmanagement.entity.Candidate;
 import fr.imt_atlantique.fip.inf210.jobmanagement.entity.Company;
 import fr.imt_atlantique.fip.inf210.jobmanagement.repository.AppUserJpaRepository;
 import fr.imt_atlantique.fip.inf210.jobmanagement.repository.CandidateJpaRepository;
@@ -54,43 +51,6 @@ class AppUserServiceTest {
 
         verify(candidateRepository, times(1)).findByAppUserMail("delete.test@imt-atlantique.fr");
         verify(repository, times(1)).delete(user);
-    }
-
-    @Test
-    void shouldCreateCompanyProfileWhenSavingUserWithDefaultProfile() {
-        AppUser user = new AppUser("new.company@imt-atlantique.fr", "pwd", AppUser.UserType.company);
-        when(repository.save(user)).thenReturn(user);
-
-        service.saveWithDefaultProfile(user);
-
-        ArgumentCaptor<Company> captor = ArgumentCaptor.forClass(Company.class);
-        verify(companyRepository).save(captor.capture());
-        verify(candidateRepository, never()).save(any(Candidate.class));
-        assertEquals("new.company", captor.getValue().getDenomination());
-    }
-
-    @Test
-    void shouldCreateApplicantProfileWhenSavingUserWithDefaultProfile() {
-        AppUser user = new AppUser("new.applicant@imt-atlantique.fr", "pwd", AppUser.UserType.applicant);
-        when(repository.save(user)).thenReturn(user);
-
-        service.saveWithDefaultProfile(user);
-
-        ArgumentCaptor<Candidate> captor = ArgumentCaptor.forClass(Candidate.class);
-        verify(candidateRepository).save(captor.capture());
-        verify(companyRepository, never()).save(any(Company.class));
-        assertEquals("new.applicant", captor.getValue().getLastname());
-    }
-
-    @Test
-    void shouldNotCreateProfileWhenSavingAdminWithDefaultProfile() {
-        AppUser admin = new AppUser("new.admin@imt-atlantique.fr", "pwd", AppUser.UserType.admin);
-        when(repository.save(admin)).thenReturn(admin);
-
-        service.saveWithDefaultProfile(admin);
-
-        verify(companyRepository, never()).save(any(Company.class));
-        verify(candidateRepository, never()).save(any(Candidate.class));
     }
 
     @Test

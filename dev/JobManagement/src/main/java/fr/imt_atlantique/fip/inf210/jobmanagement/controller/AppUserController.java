@@ -22,8 +22,17 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 
 import fr.imt_atlantique.fip.inf210.jobmanagement.entity.AppUser;
+import fr.imt_atlantique.fip.inf210.jobmanagement.entity.Candidate;
+import fr.imt_atlantique.fip.inf210.jobmanagement.entity.Company;
+import fr.imt_atlantique.fip.inf210.jobmanagement.repository.CandidateJpaRepository;
+import fr.imt_atlantique.fip.inf210.jobmanagement.repository.CompanyJpaRepository;
 import fr.imt_atlantique.fip.inf210.jobmanagement.service.AppUserService;
 import jakarta.servlet.http.HttpSession;
+
+
+
+
+    
 
 @Controller
 public class AppUserController {
@@ -32,6 +41,13 @@ public class AppUserController {
     
     @Autowired
     private AppUserService appUserService;
+
+    @Autowired
+    private CompanyJpaRepository companyRepository;
+
+    @Autowired
+    private CandidateJpaRepository candidateRepository;
+
 
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> credentials, HttpSession session) {
@@ -130,8 +146,24 @@ public class AppUserController {
             // Create new user
             AppUser newUser = new AppUser(mail, password, AppUser.UserType.valueOf(usertype));
             
-            // Save user and profile through service layer.
-            AppUser savedUser = appUserService.saveWithDefaultProfile(newUser);
+            // Save to database
+            AppUser savedUser = appUserService.save(newUser);
+
+            if (savedUser.getUsertype() == AppUser.UserType.company) {
+                companyRepository.save(new Company(
+                        savedUser,
+                        deriveDefaultProfileName(savedUser.getMail(), 100),
+                        null,
+                        null
+                ));
+            } else if (savedUser.getUsertype() == AppUser.UserType.applicant) {
+                candidateRepository.save(new Candidate(
+                        savedUser,
+                        deriveDefaultProfileName(savedUser.getMail(), 50),
+                        null,
+                        null
+                ));
+            }
 
             LOGGER.info("User created successfully mail={} type={}", savedUser.getMail(), savedUser.getUsertype());
             
@@ -220,6 +252,24 @@ public class AppUserController {
             LOGGER.error("Error processing modified user data for mail={}: {}", mail, e.getMessage(), e);
             return "redirect:/manageusers?error=server-error";
         }
+    }
+
+    private String deriveDefaultProfileName(String mail, int maxLength) {
+        if (mail == null || mail.isBlank()) {
+            return "unknown";
+        }
+
+        int atIndex = mail.indexOf('@');
+        String baseName = mail;
+        if (atIndex > 0) {
+            baseName = mail.substring(0, atIndex);
+        }
+
+        if (baseName.length() > maxLength) {
+            return baseName.substring(0, maxLength);
+        }
+
+        return baseName;
     }
 
     private void requireAdmin(HttpSession session) {

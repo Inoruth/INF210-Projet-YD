@@ -6,13 +6,11 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import fr.imt_atlantique.fip.inf210.jobmanagement.entity.JobOffer;
 import fr.imt_atlantique.fip.inf210.jobmanagement.repository.JobOfferJpaRepository;
 
 @Service
-@Transactional(readOnly = true)
 public class JobOfferServiceImpl implements JobOfferService {
 
     private final JobOfferJpaRepository jobOfferRepository;
@@ -35,7 +33,6 @@ public class JobOfferServiceImpl implements JobOfferService {
     }
 
     @Override
-    @Transactional
     public JobOffer save(JobOffer jobOffer) {
         boolean isNewOffer = jobOffer.getId() == null;
         JobOffer saved = jobOfferRepository.save(jobOffer);
@@ -58,7 +55,6 @@ public class JobOfferServiceImpl implements JobOfferService {
     }
 
     @Override
-    @Transactional
     public void deleteByIdAndCompanyId(Integer id, Integer companyId) {
         jobOfferRepository.findByIdAndCompanyId(id, companyId).ifPresent(jobOfferRepository::delete);
     }

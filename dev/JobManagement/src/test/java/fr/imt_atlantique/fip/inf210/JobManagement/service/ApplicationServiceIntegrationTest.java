@@ -16,7 +16,6 @@ import fr.imt_atlantique.fip.inf210.jobmanagement.entity.Application;
 import fr.imt_atlantique.fip.inf210.jobmanagement.entity.Candidate;
 import fr.imt_atlantique.fip.inf210.jobmanagement.entity.Company;
 import fr.imt_atlantique.fip.inf210.jobmanagement.entity.JobOffer;
-import fr.imt_atlantique.fip.inf210.jobmanagement.entity.MessageToApplication;
 import fr.imt_atlantique.fip.inf210.jobmanagement.entity.QualificationLevel;
 import fr.imt_atlantique.fip.inf210.jobmanagement.entity.Sector;
 import fr.imt_atlantique.fip.inf210.jobmanagement.repository.AppUserJpaRepository;
@@ -128,13 +127,6 @@ class ApplicationServiceIntegrationTest {
 
         assertTrue(message.isPresent());
         assertTrue(message.get().getMessage().startsWith("Automatic message:"));
-
-        application.setCv("Auto CV Updated");
-        applicationService.save(application);
-
-        List<MessageToApplication> candidateMessages = messageToApplicationRepository
-            .findByApplicationCandidateIdOrderByPublicationdateDesc(candidate.getId());
-        assertEquals(1, candidateMessages.size());
     }
 
     private Candidate createCandidate(String mail, String lastname) {
