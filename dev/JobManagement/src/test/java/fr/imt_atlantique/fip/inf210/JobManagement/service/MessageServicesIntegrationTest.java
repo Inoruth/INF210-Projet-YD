@@ -1,5 +1,13 @@
 package fr.imt_atlantique.fip.inf210.JobManagement.service;
 
+/*
+ * Fichier: MessageServicesIntegrationTest
+ * Cette classe teste le service avec le contexte Spring complet.
+ * Elle valide l'integration entre la couche metier, les repositories et la base de test.
+ * Les scenarios verifies reproduisent les flux fonctionnels importants.
+ * Ces tests detectent les regressions entre couches applicatives.
+ */
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
@@ -61,6 +69,7 @@ class MessageServicesIntegrationTest {
     @Autowired
     private SectorJpaRepository sectorRepository;
 
+    // Ce test verifie le comportement de shouldSaveAndReadMessagesThroughServices.
     @Test
     void shouldSaveAndReadMessagesThroughServices() {
         TestDataset data = createDataset();
@@ -87,6 +96,7 @@ class MessageServicesIntegrationTest {
         assertEquals("Message to company", candidateToCompany.get(0).getMessage());
     }
 
+    // Ce test verifie le comportement de createDataset.
     private TestDataset createDataset() {
         AppUser companyUser = appUserRepository.save(new AppUser(
                 "service.msg.company@imt-atlantique.fr",
@@ -121,6 +131,7 @@ class MessageServicesIntegrationTest {
         toApplication.setPublicationdate(LocalDate.of(2026, 3, 10));
         messageToApplicationService.save(toApplication);
 
+        // Ce test verifie le comportement de TestDataset.
         return new TestDataset(company, candidate, offer, application);
     }
 

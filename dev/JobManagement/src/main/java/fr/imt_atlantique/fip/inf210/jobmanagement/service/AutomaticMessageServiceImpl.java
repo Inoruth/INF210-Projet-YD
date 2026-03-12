@@ -1,5 +1,13 @@
 package fr.imt_atlantique.fip.inf210.jobmanagement.service;
 
+/*
+ * Fichier: AutomaticMessageServiceImpl
+ * Cette classe implemente les operations metier du service.
+ * Elle orchestre les repositories pour appliquer les regles fonctionnelles du domaine.
+ * Elle traite les cas limites (donnees absentes, contraintes metier, dependances).
+ * Les controllers s'appuient sur cette implementation pour executer les actions metier.
+ */
+
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -31,6 +39,7 @@ public class AutomaticMessageServiceImpl implements AutomaticMessageService {
         this.messageToApplicationRepository = messageToApplicationRepository;
     }
 
+    // Cette methode implemente l operation sendAutomaticMessagesForNewOffer.
     @Override
     public int sendAutomaticMessagesForNewOffer(JobOffer jobOffer) {
         if (jobOffer == null || jobOffer.getId() == null) {
@@ -64,6 +73,7 @@ public class AutomaticMessageServiceImpl implements AutomaticMessageService {
         return sentCount;
     }
 
+    // Cette methode implemente l operation sendAutomaticMessagesForNewApplication.
     @Override
     public int sendAutomaticMessagesForNewApplication(Application application) {
         if (application == null || application.getId() == null) {
@@ -97,6 +107,7 @@ public class AutomaticMessageServiceImpl implements AutomaticMessageService {
         return sentCount;
     }
 
+    // Cette methode implemente l operation buildOfferToCandidateMessage.
     private String buildOfferToCandidateMessage(JobOffer offer, Application application) {
         return String.format(
                 "Automatic message: your application #%d may match offer #%d (%s).",
@@ -106,6 +117,7 @@ public class AutomaticMessageServiceImpl implements AutomaticMessageService {
         );
     }
 
+    // Cette methode implemente l operation buildApplicationToCompanyMessage.
     private String buildApplicationToCompanyMessage(Application application, JobOffer offer) {
         return String.format(
                 "Automatic message: application #%d may match your offer #%d (%s).",

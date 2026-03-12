@@ -1,5 +1,13 @@
 package fr.imt_atlantique.fip.inf210.JobManagement.controller;
 
+/*
+ * Fichier: AppUserControllerAuthIntegrationTest
+ * Cette classe teste le comportement web du controller avec MockMvc.
+ * Les scenarios couvrent l'authentification, les autorisations et la validation des entrees.
+ * Les assertions verifient les statuts HTTP, les redirections et les effets en base.
+ * Ces tests evitent les regressions sur les routes exposees.
+ */
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -28,6 +36,7 @@ class AppUserControllerAuthIntegrationTest {
     @Autowired
     private AppUserJpaRepository appUserRepository;
 
+    // Ce test verifie le comportement de shouldReturnBadRequestWhenLoginMailMissing.
     @Test
     void shouldReturnBadRequestWhenLoginMailMissing() throws Exception {
         mockMvc.perform(post("/login")
@@ -38,6 +47,7 @@ class AppUserControllerAuthIntegrationTest {
                 .andExpect(jsonPath("$.message").value("Email and password are required"));
     }
 
+    // Ce test verifie le comportement de shouldReturnBadRequestWhenLoginPasswordMissing.
     @Test
     void shouldReturnBadRequestWhenLoginPasswordMissing() throws Exception {
         mockMvc.perform(post("/login")
@@ -48,6 +58,7 @@ class AppUserControllerAuthIntegrationTest {
                 .andExpect(jsonPath("$.message").value("Email and password are required"));
     }
 
+    // Ce test verifie le comportement de shouldReturnBadRequestWhenLoginPayloadIsEmpty.
     @Test
     void shouldReturnBadRequestWhenLoginPayloadIsEmpty() throws Exception {
         mockMvc.perform(post("/login")
@@ -58,6 +69,7 @@ class AppUserControllerAuthIntegrationTest {
                 .andExpect(jsonPath("$.message").value("Email and password are required"));
     }
 
+    // Ce test verifie le comportement de shouldReturnBadRequestWhenLoginMailIsBlank.
     @Test
     void shouldReturnBadRequestWhenLoginMailIsBlank() throws Exception {
         mockMvc.perform(post("/login")
@@ -67,6 +79,7 @@ class AppUserControllerAuthIntegrationTest {
                 .andExpect(jsonPath("$.success").value(false));
     }
 
+    // Ce test verifie le comportement de shouldReturnFailureWhenUserDoesNotExist.
     @Test
     void shouldReturnFailureWhenUserDoesNotExist() throws Exception {
         mockMvc.perform(post("/login")
@@ -77,6 +90,7 @@ class AppUserControllerAuthIntegrationTest {
                 .andExpect(jsonPath("$.message").value("Invalid email or password"));
     }
 
+    // Ce test verifie le comportement de shouldReturnFailureWhenPasswordIsWrong.
     @Test
     void shouldReturnFailureWhenPasswordIsWrong() throws Exception {
         appUserRepository.save(new AppUser("known@imt-atlantique.fr", "rightpwd", AppUser.UserType.applicant));
@@ -89,6 +103,7 @@ class AppUserControllerAuthIntegrationTest {
                 .andExpect(jsonPath("$.message").value("Invalid email or password"));
     }
 
+    // Ce test verifie le comportement de shouldLoginAndStoreSessionAttributes.
     @Test
     void shouldLoginAndStoreSessionAttributes() throws Exception {
         appUserRepository.save(new AppUser("valid@imt-atlantique.fr", "pwd1234", AppUser.UserType.company));
@@ -104,6 +119,7 @@ class AppUserControllerAuthIntegrationTest {
                 .andExpect(request().sessionAttribute("userType", "company"));
     }
 
+    // Ce test verifie le comportement de shouldLoginApplicantAndExposeApplicantUserType.
     @Test
     void shouldLoginApplicantAndExposeApplicantUserType() throws Exception {
         appUserRepository.save(new AppUser("applicant.valid@imt-atlantique.fr", "pwd1234", AppUser.UserType.applicant));
@@ -117,6 +133,7 @@ class AppUserControllerAuthIntegrationTest {
                 .andExpect(request().sessionAttribute("userType", "applicant"));
     }
 
+    // Ce test verifie le comportement de shouldLogoutAndRedirectToHome.
     @Test
     void shouldLogoutAndRedirectToHome() throws Exception {
         MockHttpSession session = new MockHttpSession();

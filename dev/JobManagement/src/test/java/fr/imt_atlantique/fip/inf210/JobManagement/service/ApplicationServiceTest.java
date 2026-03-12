@@ -1,5 +1,13 @@
 package fr.imt_atlantique.fip.inf210.JobManagement.service;
 
+/*
+ * Fichier: ApplicationServiceTest
+ * Cette classe teste la logique du service en mode unitaire.
+ * Les dependances sont simulees pour isoler le comportement metier.
+ * Les scenarios couvrent les cas nominaux et les cas d'erreur.
+ * Les assertions verifient les resultats et les interactions attendues.
+ */
+
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +35,7 @@ class ApplicationServiceTest {
     private final AutomaticMessageService automaticMessageService = mock(AutomaticMessageService.class);
     private final ApplicationService service = new ApplicationServiceImpl(repository, automaticMessageService);
 
+    // Ce test verifie le comportement de shouldDeleteOnlyWhenOwnedByCandidate.
     @Test
     void shouldDeleteOnlyWhenOwnedByCandidate() {
         Application application = new Application();
@@ -37,6 +46,7 @@ class ApplicationServiceTest {
         verify(repository).delete(application);
     }
 
+    // Ce test verifie le comportement de shouldNotDeleteWhenApplicationIsNotOwnedByCandidate.
     @Test
     void shouldNotDeleteWhenApplicationIsNotOwnedByCandidate() {
         when(repository.findByIdAndCandidateId(10, 4)).thenReturn(Optional.empty());
@@ -46,6 +56,7 @@ class ApplicationServiceTest {
         verify(repository, never()).delete(org.mockito.ArgumentMatchers.any(Application.class));
     }
 
+    // Ce test verifie le comportement de shouldFindAllApplications.
     @Test
     void shouldFindAllApplications() {
         when(repository.findAll()).thenReturn(List.of(new Application(), new Application()));
@@ -56,6 +67,7 @@ class ApplicationServiceTest {
         verify(repository).findAll();
     }
 
+    // Ce test verifie le comportement de shouldFindApplicationById.
     @Test
     void shouldFindApplicationById() {
         Application application = new Application();
@@ -67,6 +79,7 @@ class ApplicationServiceTest {
         verify(repository).findById(24);
     }
 
+    // Ce test verifie le comportement de shouldReturnEmptyWhenApplicationIdDoesNotExist.
     @Test
     void shouldReturnEmptyWhenApplicationIdDoesNotExist() {
         when(repository.findById(99)).thenReturn(Optional.empty());
@@ -77,6 +90,7 @@ class ApplicationServiceTest {
         verify(repository).findById(99);
     }
 
+    // Ce test verifie le comportement de shouldFindApplicationsByCandidateId.
     @Test
     void shouldFindApplicationsByCandidateId() {
         when(repository.findByCandidateIdOrderByAppdateDesc(5)).thenReturn(List.of(new Application()));
@@ -87,6 +101,7 @@ class ApplicationServiceTest {
         verify(repository).findByCandidateIdOrderByAppdateDesc(5);
     }
 
+    // Ce test verifie le comportement de shouldFindApplicationByIdAndCandidateId.
     @Test
     void shouldFindApplicationByIdAndCandidateId() {
         Application application = new Application();
@@ -98,6 +113,7 @@ class ApplicationServiceTest {
         verify(repository).findByIdAndCandidateId(11, 5);
     }
 
+    // Ce test verifie le comportement de shouldReturnEmptyWhenApplicationDoesNotBelongToCandidate.
     @Test
     void shouldReturnEmptyWhenApplicationDoesNotBelongToCandidate() {
         when(repository.findByIdAndCandidateId(11, 99)).thenReturn(Optional.empty());
@@ -108,6 +124,7 @@ class ApplicationServiceTest {
         verify(repository).findByIdAndCandidateId(11, 99);
     }
 
+    // Ce test verifie le comportement de shouldSearchWithoutSectorFilterWhenNoSectorsProvided.
     @Test
     void shouldSearchWithoutSectorFilterWhenNoSectorsProvided() {
         when(repository.searchByCriteria(false, Collections.emptySet(), (short) 3)).thenReturn(List.of(new Application()));
@@ -118,6 +135,7 @@ class ApplicationServiceTest {
         verify(repository).searchByCriteria(false, Collections.emptySet(), (short) 3);
     }
 
+    // Ce test verifie le comportement de shouldSearchWithoutSectorFilterWhenSectorSetIsEmpty.
     @Test
     void shouldSearchWithoutSectorFilterWhenSectorSetIsEmpty() {
         when(repository.searchByCriteria(false, Collections.emptySet(), (short) 4)).thenReturn(List.of(new Application()));
@@ -128,6 +146,7 @@ class ApplicationServiceTest {
         verify(repository).searchByCriteria(false, Collections.emptySet(), (short) 4);
     }
 
+    // Ce test verifie le comportement de shouldSearchByCriteriaWithNullMinimumRank.
     @Test
     void shouldSearchByCriteriaWithNullMinimumRank() {
         Set<Integer> sectorIds = Set.of(9);
@@ -139,6 +158,7 @@ class ApplicationServiceTest {
         verify(repository).searchByCriteria(eq(true), eq(sectorIds), eq(null));
     }
 
+    // Ce test verifie le comportement de shouldSearchWithSectorFilter.
     @Test
     void shouldSearchWithSectorFilter() {
         Set<Integer> sectorIds = Set.of(1, 2);
@@ -150,6 +170,7 @@ class ApplicationServiceTest {
         verify(repository).searchByCriteria(eq(true), eq(sectorIds), eq((short) 4));
     }
 
+    // Ce test verifie le comportement de shouldTriggerAutomaticMessagesWhenCreatingApplication.
     @Test
     void shouldTriggerAutomaticMessagesWhenCreatingApplication() {
         Application newApplication = new Application();
@@ -163,6 +184,7 @@ class ApplicationServiceTest {
         verify(automaticMessageService).sendAutomaticMessagesForNewApplication(savedApplication);
     }
 
+    // Ce test verifie le comportement de shouldNotTriggerAutomaticMessagesWhenUpdatingApplication.
     @Test
     void shouldNotTriggerAutomaticMessagesWhenUpdatingApplication() {
         Application existingApplication = new Application();
@@ -174,6 +196,7 @@ class ApplicationServiceTest {
         verify(automaticMessageService, never()).sendAutomaticMessagesForNewApplication(existingApplication);
     }
 
+    // Ce test verifie le comportement de shouldFindMatchingByJobOfferId.
     @Test
     void shouldFindMatchingByJobOfferId() {
         when(repository.findMatchingByJobOfferId(12)).thenReturn(List.of(new Application()));

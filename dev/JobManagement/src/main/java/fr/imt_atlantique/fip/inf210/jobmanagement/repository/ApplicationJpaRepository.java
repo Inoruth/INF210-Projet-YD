@@ -1,5 +1,13 @@
 package fr.imt_atlantique.fip.inf210.jobmanagement.repository;
 
+/*
+ * Fichier: ApplicationJpaRepository
+ * Cette interface est un repository Spring Data JPA.
+ * Elle fournit l'acces aux donnees pour l'entite concernee.
+ * Les methodes declarees ici sont utilisees pour les operations de lecture et d'ecriture.
+ * La couche service utilise ce repository pour interagir avec la base.
+ */
+
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -14,8 +22,10 @@ import fr.imt_atlantique.fip.inf210.jobmanagement.entity.Application;
 @Repository
 public interface ApplicationJpaRepository extends JpaRepository<Application, Integer> {
 
+	// Cette methode implemente l operation findByCandidateIdOrderByAppdateDesc.
 	List<Application> findByCandidateIdOrderByAppdateDesc(Integer candidateId);
 
+	// Cette methode implemente l operation findByIdAndCandidateId.
 	Optional<Application> findByIdAndCandidateId(Integer id, Integer candidateId);
 
 	@Query("""
@@ -47,5 +57,6 @@ public interface ApplicationJpaRepository extends JpaRepository<Application, Int
 			)
 			order by a.appdate desc
 			""")
+	// Cette methode implemente l operation findMatchingByJobOfferId.
 	List<Application> findMatchingByJobOfferId(@Param("jobOfferId") Integer jobOfferId);
 }

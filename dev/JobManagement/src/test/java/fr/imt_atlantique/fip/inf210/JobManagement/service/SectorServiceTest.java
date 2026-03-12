@@ -1,5 +1,13 @@
 package fr.imt_atlantique.fip.inf210.JobManagement.service;
 
+/*
+ * Fichier: SectorServiceTest
+ * Cette classe teste la logique du service en mode unitaire.
+ * Les dependances sont simulees pour isoler le comportement metier.
+ * Les scenarios couvrent les cas nominaux et les cas d'erreur.
+ * Les assertions verifient les resultats et les interactions attendues.
+ */
+
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -18,10 +26,12 @@ class SectorServiceTest {
     private final SectorJpaRepository repository = mock(SectorJpaRepository.class);
     private final SectorServiceImpl service = new SectorServiceImpl();
 
+    // Ce test verifie le comportement de setUp.
     private void setUp() {
         ReflectionTestUtils.setField(service, "sectorRepository", repository);
     }
 
+    // Ce test verifie le comportement de shouldReturnAllSectors.
     @Test
     void shouldReturnAllSectors() {
         setUp();
@@ -33,6 +43,7 @@ class SectorServiceTest {
         verify(repository).findAll();
     }
 
+    // Ce test verifie le comportement de shouldReturnNoSectorsWhenRepositoryIsEmpty.
     @Test
     void shouldReturnNoSectorsWhenRepositoryIsEmpty() {
         setUp();

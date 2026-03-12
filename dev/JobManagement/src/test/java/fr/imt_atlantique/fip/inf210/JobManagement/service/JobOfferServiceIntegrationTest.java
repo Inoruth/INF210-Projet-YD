@@ -1,5 +1,13 @@
 package fr.imt_atlantique.fip.inf210.JobManagement.service;
 
+/*
+ * Fichier: JobOfferServiceIntegrationTest
+ * Cette classe teste le service avec le contexte Spring complet.
+ * Elle valide l'integration entre la couche metier, les repositories et la base de test.
+ * Les scenarios verifies reproduisent les flux fonctionnels importants.
+ * Ces tests detectent les regressions entre couches applicatives.
+ */
+
 import java.util.List;
 import java.util.Set;
 
@@ -55,6 +63,7 @@ class JobOfferServiceIntegrationTest {
     @Autowired
     private MessageToOfferJpaRepository messageToOfferRepository;
 
+    // Ce test verifie le comportement de shouldSearchOffersByCriteriaThroughService.
     @Test
     void shouldSearchOffersByCriteriaThroughService() {
         Company company = createCompany("integration.offer.company@imt-atlantique.fr", "Integration Co");
@@ -73,6 +82,7 @@ class JobOfferServiceIntegrationTest {
         assertEquals("Expected Offer", offers.get(0).getTitle());
     }
 
+    // Ce test verifie le comportement de shouldFindMatchingOffersForApplicationThroughService.
     @Test
     void shouldFindMatchingOffersForApplicationThroughService() {
         Company company = createCompany("integration.offer.company2@imt-atlantique.fr", "Integration Co 2");
@@ -97,6 +107,7 @@ class JobOfferServiceIntegrationTest {
         assertEquals("Matching Offer", matches.get(0).getTitle());
     }
 
+    // Ce test verifie le comportement de shouldDeleteOnlyOwnedOfferThroughService.
     @Test
     void shouldDeleteOnlyOwnedOfferThroughService() {
         Company owner = createCompany("integration.offer.owner@imt-atlantique.fr", "Owner Co");
@@ -112,6 +123,7 @@ class JobOfferServiceIntegrationTest {
         assertFalse(jobOfferService.findById(offer.getId()).isPresent());
     }
 
+    // Ce test verifie le comportement de shouldSendAutomaticMessageWhenPublishingOffer.
     @Test
     void shouldSendAutomaticMessageWhenPublishingOffer() {
         Company company = createCompany("integration.offer.auto.company@imt-atlantique.fr", "Auto Co");
@@ -130,22 +142,26 @@ class JobOfferServiceIntegrationTest {
         assertTrue(message.get().getMessage().startsWith("Automatic message:"));
     }
 
+    // Ce test verifie le comportement de createCompany.
     private Company createCompany(String mail, String denomination) {
         AppUser user = appUserRepository.save(new AppUser(mail, "pwd123", AppUser.UserType.company));
         return companyRepository.save(new Company(user, denomination, "description", "Brest"));
     }
 
+    // Ce test verifie le comportement de createCandidate.
     private Candidate createCandidate(String mail, String lastname) {
         AppUser user = appUserRepository.save(new AppUser(mail, "pwd123", AppUser.UserType.applicant));
         return candidateRepository.save(new Candidate(user, lastname, "Alice", "Rennes"));
     }
 
+    // Ce test verifie le comportement de createOffer.
     private JobOffer createOffer(Company company, QualificationLevel level, String title, Set<Sector> sectors) {
         JobOffer offer = new JobOffer(title, "Task description", company, level);
         offer.setSectors(sectors);
         return jobOfferService.save(offer);
     }
 
+    // Ce test verifie le comportement de createApplication.
     private Application createApplication(Candidate candidate, QualificationLevel level, Set<Sector> sectors) {
         Application application = new Application("CV", candidate, level);
         application.setSectors(sectors);

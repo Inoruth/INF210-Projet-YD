@@ -1,5 +1,13 @@
 package fr.imt_atlantique.fip.inf210.jobmanagement.entity;
 
+/*
+ * Fichier: MessageToOffer
+ * Cette classe represente une entite persistante du domaine metier.
+ * Les annotations JPA decrivent le mapping table, colonnes et relations.
+ * Elle transporte les donnees entre la base de donnees et la couche service.
+ * Son contenu doit rester coherent avec le schema et les contraintes de persistance.
+ */
+
 import java.time.LocalDate;
 
 import jakarta.persistence.Column;
@@ -38,51 +46,63 @@ public class MessageToOffer {
     @JoinColumn(name = "application_id", nullable = false)
     private Application application;
 
+    // Cette methode implemente l operation MessageToOffer.
     public MessageToOffer() {
     }
 
+    // Cette methode implemente l operation MessageToOffer.
     public MessageToOffer(String message, JobOffer jobOffer, Application application) {
         this.message = message;
         this.jobOffer = jobOffer;
         this.application = application;
     }
 
+    // Cette methode implemente l operation getId.
     public Integer getId() {
         return id;
     }
 
+    // Cette methode implemente l operation setId.
     public void setId(Integer id) {
         this.id = id;
     }
 
+    // Cette methode implemente l operation getPublicationdate.
     public LocalDate getPublicationdate() {
         return publicationdate;
     }
 
+    // Cette methode implemente l operation setPublicationdate.
     public void setPublicationdate(LocalDate publicationdate) {
         this.publicationdate = publicationdate;
     }
 
+    // Cette methode implemente l operation getMessage.
     public String getMessage() {
         return message;
     }
 
+    // Cette methode implemente l operation setMessage.
     public void setMessage(String message) {
         this.message = message;
     }
 
+    // Cette methode implemente l operation getJobOffer.
     public JobOffer getJobOffer() {
         return jobOffer;
     }
 
+    // Cette methode implemente l operation setJobOffer.
     public void setJobOffer(JobOffer jobOffer) {
         this.jobOffer = jobOffer;
     }
 
+    // Cette methode implemente l operation getApplication.
     public Application getApplication() {
         return application;
     }
 
+    // Cette methode implemente l operation setApplication.
     public void setApplication(Application application) {
         this.application = application;
     }

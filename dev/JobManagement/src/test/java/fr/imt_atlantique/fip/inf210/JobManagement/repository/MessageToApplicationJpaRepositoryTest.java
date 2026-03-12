@@ -1,5 +1,13 @@
 package fr.imt_atlantique.fip.inf210.JobManagement.repository;
 
+/*
+ * Fichier: MessageToApplicationJpaRepositoryTest
+ * Cette classe teste les requetes JPA du repository cible.
+ * Les tests s'executent sur une base de test pour valider la persistance et les recherches.
+ * Les assertions controlent la coherence des resultats retournes par les methodes.
+ * L'objectif est de securiser le mapping et le comportement des requetes.
+ */
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
@@ -54,6 +62,7 @@ class MessageToApplicationJpaRepositoryTest {
     @Autowired
     private SectorJpaRepository sectorRepository;
 
+    // Ce test verifie le comportement de shouldFindByUniqueApplicationOfferPair.
     @Test
     void shouldFindByUniqueApplicationOfferPair() {
         TestDataset data = createDataset();
@@ -63,6 +72,7 @@ class MessageToApplicationJpaRepositoryTest {
                 .isPresent());
     }
 
+    // Ce test verifie le comportement de shouldListCompanyMessagesOrderedByPublicationDateDesc.
     @Test
     void shouldListCompanyMessagesOrderedByPublicationDateDesc() {
         TestDataset data = createDataset();
@@ -75,6 +85,7 @@ class MessageToApplicationJpaRepositoryTest {
         assertEquals(data.messageOne.getId(), messages.get(1).getId());
     }
 
+    // Ce test verifie le comportement de shouldListCandidateMessagesOrderedByPublicationDateDesc.
     @Test
     void shouldListCandidateMessagesOrderedByPublicationDateDesc() {
         TestDataset data = createDataset();
@@ -87,6 +98,7 @@ class MessageToApplicationJpaRepositoryTest {
         assertEquals(data.messageOne.getId(), messages.get(1).getId());
     }
 
+    // Ce test verifie le comportement de createDataset.
     private TestDataset createDataset() {
         Company company = createCompany("mta.company@imt-atlantique.fr", "MTA Company");
         Candidate candidate = createCandidate("mta.candidate@imt-atlantique.fr", "MtaCandidate");
@@ -108,25 +120,30 @@ class MessageToApplicationJpaRepositoryTest {
         messageTwo.setPublicationdate(LocalDate.of(2026, 2, 15));
         messageTwo = messageRepository.save(messageTwo);
 
+        // Ce test verifie le comportement de TestDataset.
         return new TestDataset(company, candidate, offerOne, applicationOne, messageOne, messageTwo);
     }
 
+    // Ce test verifie le comportement de createCompany.
     private Company createCompany(String mail, String denomination) {
         AppUser user = appUserRepository.save(new AppUser(mail, "pwd123", AppUser.UserType.company));
         return companyRepository.save(new Company(user, denomination, "description", "Brest"));
     }
 
+    // Ce test verifie le comportement de createCandidate.
     private Candidate createCandidate(String mail, String lastname) {
         AppUser user = appUserRepository.save(new AppUser(mail, "pwd123", AppUser.UserType.applicant));
         return candidateRepository.save(new Candidate(user, lastname, "Alice", "Rennes"));
     }
 
+    // Ce test verifie le comportement de createOffer.
     private JobOffer createOffer(Company company, QualificationLevel level, String title, Set<Sector> sectors) {
         JobOffer offer = new JobOffer(title, "Task description", company, level);
         offer.setSectors(sectors);
         return jobOfferRepository.save(offer);
     }
 
+    // Ce test verifie le comportement de createApplication.
     private Application createApplication(Candidate candidate, QualificationLevel level, Set<Sector> sectors, String cv) {
         Application application = new Application(cv, candidate, level);
         application.setSectors(sectors);

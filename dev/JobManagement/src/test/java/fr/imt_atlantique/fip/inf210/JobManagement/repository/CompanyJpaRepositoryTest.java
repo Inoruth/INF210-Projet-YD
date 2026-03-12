@@ -1,5 +1,13 @@
 package fr.imt_atlantique.fip.inf210.JobManagement.repository;
 
+/*
+ * Fichier: CompanyJpaRepositoryTest
+ * Cette classe teste les requetes JPA du repository cible.
+ * Les tests s'executent sur une base de test pour valider la persistance et les recherches.
+ * Les assertions controlent la coherence des resultats retournes par les methodes.
+ * L'objectif est de securiser le mapping et le comportement des requetes.
+ */
+
 import java.util.List;
 import java.util.Optional;
 
@@ -23,6 +31,7 @@ class CompanyJpaRepositoryTest {
     @Autowired
     private AppUserJpaRepository appUserRepository;
 
+    // Ce test verifie le comportement de shouldFindCompanyByAppUserMail.
     @Test
     void shouldFindCompanyByAppUserMail() {
         AppUser user = appUserRepository.save(new AppUser(
@@ -38,6 +47,7 @@ class CompanyJpaRepositoryTest {
         assertEquals("Acme Testing", found.get().getDenomination());
     }
 
+    // Ce test verifie le comportement de shouldSearchCompaniesByDenomination.
     @Test
     void shouldSearchCompaniesByDenomination() {
         createCompany("company.one@imt-atlantique.fr", "Acme Consulting", "Nantes");
@@ -52,6 +62,7 @@ class CompanyJpaRepositoryTest {
         assertEquals("Acme Labs", companies.get(1).getDenomination());
     }
 
+    // Ce test verifie le comportement de createCompany.
     private void createCompany(String mail, String denomination, String city) {
         AppUser user = appUserRepository.save(new AppUser(mail, "pwd123", AppUser.UserType.company));
         companyRepository.save(new Company(user, denomination, "description", city));

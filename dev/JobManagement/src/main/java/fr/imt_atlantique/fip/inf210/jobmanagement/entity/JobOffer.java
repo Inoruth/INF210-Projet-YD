@@ -1,5 +1,13 @@
 package fr.imt_atlantique.fip.inf210.jobmanagement.entity;
 
+/*
+ * Fichier: JobOffer
+ * Cette classe represente une entite persistante du domaine metier.
+ * Les annotations JPA decrivent le mapping table, colonnes et relations.
+ * Elle transporte les donnees entre la base de donnees et la couche service.
+ * Son contenu doit rester coherent avec le schema et les contraintes de persistance.
+ */
+
 import java.time.LocalDate;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -49,9 +57,11 @@ public class JobOffer {
     )
     private Set<Sector> sectors = new LinkedHashSet<>();
 
+    // Cette methode implemente l operation JobOffer.
     public JobOffer() {
     }
 
+    // Cette methode implemente l operation JobOffer.
     public JobOffer(String title, String taskdescription, Company company, QualificationLevel qualificationLevel) {
         this.title = title;
         this.taskdescription = taskdescription;
@@ -59,58 +69,72 @@ public class JobOffer {
         this.qualificationLevel = qualificationLevel;
     }
 
+    // Cette methode implemente l operation getId.
     public Integer getId() {
         return id;
     }
 
+    // Cette methode implemente l operation setId.
     public void setId(Integer id) {
         this.id = id;
     }
 
+    // Cette methode implemente l operation getTitle.
     public String getTitle() {
         return title;
     }
 
+    // Cette methode implemente l operation setTitle.
     public void setTitle(String title) {
         this.title = title;
     }
 
+    // Cette methode implemente l operation getTaskdescription.
     public String getTaskdescription() {
         return taskdescription;
     }
 
+    // Cette methode implemente l operation setTaskdescription.
     public void setTaskdescription(String taskdescription) {
         this.taskdescription = taskdescription;
     }
 
+    // Cette methode implemente l operation getPublicationdate.
     public LocalDate getPublicationdate() {
         return publicationdate;
     }
 
+    // Cette methode implemente l operation setPublicationdate.
     public void setPublicationdate(LocalDate publicationdate) {
         this.publicationdate = publicationdate;
     }
 
+    // Cette methode implemente l operation getCompany.
     public Company getCompany() {
         return company;
     }
 
+    // Cette methode implemente l operation setCompany.
     public void setCompany(Company company) {
         this.company = company;
     }
 
+    // Cette methode implemente l operation getQualificationLevel.
     public QualificationLevel getQualificationLevel() {
         return qualificationLevel;
     }
 
+    // Cette methode implemente l operation setQualificationLevel.
     public void setQualificationLevel(QualificationLevel qualificationLevel) {
         this.qualificationLevel = qualificationLevel;
     }
 
+    // Cette methode implemente l operation getSectors.
     public Set<Sector> getSectors() {
         return sectors;
     }
 
+    // Cette methode implemente l operation setSectors.
     public void setSectors(Set<Sector> sectors) {
         this.sectors = sectors;
     }

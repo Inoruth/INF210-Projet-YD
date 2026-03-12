@@ -1,5 +1,13 @@
 package fr.imt_atlantique.fip.inf210.JobManagement.controller;
 
+/*
+ * Fichier: AppUserControllerSecurityIntegrationTest
+ * Cette classe teste le comportement web du controller avec MockMvc.
+ * Les scenarios couvrent l'authentification, les autorisations et la validation des entrees.
+ * Les assertions verifient les statuts HTTP, les redirections et les effets en base.
+ * Ces tests evitent les regressions sur les routes exposees.
+ */
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
@@ -37,12 +45,14 @@ class AppUserControllerSecurityIntegrationTest {
     @Autowired
     private CandidateJpaRepository candidateRepository;
 
+    // Ce test verifie le comportement de shouldReturnUnauthorizedForAnonymousManageUsers.
     @Test
     void shouldReturnUnauthorizedForAnonymousManageUsers() throws Exception {
         mockMvc.perform(get("/manageusers"))
                 .andExpect(status().isUnauthorized());
     }
 
+    // Ce test verifie le comportement de shouldReturnUnauthorizedWhenSessionLacksUserType.
     @Test
     void shouldReturnUnauthorizedWhenSessionLacksUserType() throws Exception {
         MockHttpSession session = new MockHttpSession();
@@ -52,6 +62,7 @@ class AppUserControllerSecurityIntegrationTest {
                 .andExpect(status().isUnauthorized());
     }
 
+    // Ce test verifie le comportement de shouldReturnUnauthorizedWhenSessionLacksUserMail.
     @Test
     void shouldReturnUnauthorizedWhenSessionLacksUserMail() throws Exception {
         MockHttpSession session = new MockHttpSession();
@@ -61,12 +72,14 @@ class AppUserControllerSecurityIntegrationTest {
                 .andExpect(status().isUnauthorized());
     }
 
+    // Ce test verifie le comportement de shouldReturnUnauthorizedForAnonymousAddUserForm.
     @Test
     void shouldReturnUnauthorizedForAnonymousAddUserForm() throws Exception {
         mockMvc.perform(get("/adduser"))
                 .andExpect(status().isUnauthorized());
     }
 
+    // Ce test verifie le comportement de shouldReturnForbiddenForNonAdminAddUserForm.
     @Test
     void shouldReturnForbiddenForNonAdminAddUserForm() throws Exception {
         mockMvc.perform(get("/adduser")
@@ -74,6 +87,7 @@ class AppUserControllerSecurityIntegrationTest {
                 .andExpect(status().isForbidden());
     }
 
+    // Ce test verifie le comportement de shouldReturnUnauthorizedForAnonymousAddUserData.
     @Test
     void shouldReturnUnauthorizedForAnonymousAddUserData() throws Exception {
         mockMvc.perform(post("/adduserdata")
@@ -85,6 +99,7 @@ class AppUserControllerSecurityIntegrationTest {
                 .andExpect(status().isUnauthorized());
     }
 
+    // Ce test verifie le comportement de shouldReturnForbiddenForNonAdminAddUserData.
     @Test
     void shouldReturnForbiddenForNonAdminAddUserData() throws Exception {
         mockMvc.perform(post("/adduserdata")
@@ -97,6 +112,7 @@ class AppUserControllerSecurityIntegrationTest {
                 .andExpect(status().isForbidden());
     }
 
+    // Ce test verifie le comportement de shouldAllowAdminToCreateCompanyUser.
     @Test
     void shouldAllowAdminToCreateCompanyUser() throws Exception {
         mockMvc.perform(post("/adduserdata")
@@ -114,6 +130,7 @@ class AppUserControllerSecurityIntegrationTest {
         assertTrue(companyRepository.findByAppUserMail(created.getMail()).isPresent());
     }
 
+    // Ce test verifie le comportement de shouldAllowAdminToCreateApplicantUser.
     @Test
     void shouldAllowAdminToCreateApplicantUser() throws Exception {
         mockMvc.perform(post("/adduserdata")
@@ -131,6 +148,7 @@ class AppUserControllerSecurityIntegrationTest {
         assertTrue(candidateRepository.findByAppUserMail(created.getMail()).isPresent());
     }
 
+    // Ce test verifie le comportement de shouldRejectAdminAddUserWhenPasswordTooShort.
     @Test
     void shouldRejectAdminAddUserWhenPasswordTooShort() throws Exception {
         mockMvc.perform(post("/adduserdata")
@@ -144,6 +162,7 @@ class AppUserControllerSecurityIntegrationTest {
                 .andExpect(redirectedUrl("/adduser?error=password-short"));
     }
 
+    // Ce test verifie le comportement de shouldRejectAdminAddUserWhenPasswordMismatch.
     @Test
     void shouldRejectAdminAddUserWhenPasswordMismatch() throws Exception {
         mockMvc.perform(post("/adduserdata")
@@ -157,6 +176,7 @@ class AppUserControllerSecurityIntegrationTest {
                 .andExpect(redirectedUrl("/adduser?error=passwords-mismatch"));
     }
 
+    // Ce test verifie le comportement de shouldRejectAdminAddUserWhenTypeIsInvalid.
     @Test
     void shouldRejectAdminAddUserWhenTypeIsInvalid() throws Exception {
         mockMvc.perform(post("/adduserdata")
@@ -170,6 +190,7 @@ class AppUserControllerSecurityIntegrationTest {
                 .andExpect(redirectedUrl("/adduser?error=invalid-usertype"));
     }
 
+    // Ce test verifie le comportement de shouldRejectAdminAddUserWhenMailAlreadyExists.
     @Test
     void shouldRejectAdminAddUserWhenMailAlreadyExists() throws Exception {
         appUserRepository.save(new AppUser("already.exists@imt-atlantique.fr", "pwd1234", AppUser.UserType.company));
@@ -185,6 +206,7 @@ class AppUserControllerSecurityIntegrationTest {
                 .andExpect(redirectedUrl("/adduser?error=email-exists"));
     }
 
+    // Ce test verifie le comportement de shouldReturnForbiddenForNonAdminManageUsers.
     @Test
     void shouldReturnForbiddenForNonAdminManageUsers() throws Exception {
         mockMvc.perform(get("/manageusers")
@@ -192,6 +214,7 @@ class AppUserControllerSecurityIntegrationTest {
                 .andExpect(status().isForbidden());
     }
 
+    // Ce test verifie le comportement de shouldReturnOkForAdminManageUsers.
     @Test
     void shouldReturnOkForAdminManageUsers() throws Exception {
         mockMvc.perform(get("/manageusers")
@@ -199,12 +222,14 @@ class AppUserControllerSecurityIntegrationTest {
                 .andExpect(status().isOk());
     }
 
+    // Ce test verifie le comportement de shouldReturnUnauthorizedForAnonymousDeleteUser.
     @Test
     void shouldReturnUnauthorizedForAnonymousDeleteUser() throws Exception {
         mockMvc.perform(post("/deleteuser").param("mail", "target@imt-atlantique.fr"))
                 .andExpect(status().isUnauthorized());
     }
 
+    // Ce test verifie le comportement de shouldReturnForbiddenForNonAdminDeleteUser.
     @Test
     void shouldReturnForbiddenForNonAdminDeleteUser() throws Exception {
         mockMvc.perform(post("/deleteuser")
@@ -213,6 +238,7 @@ class AppUserControllerSecurityIntegrationTest {
                 .andExpect(status().isForbidden());
     }
 
+    // Ce test verifie le comportement de shouldAllowUserToModifyOwnProfileForm.
     @Test
     void shouldAllowUserToModifyOwnProfileForm() throws Exception {
         AppUser user = appUserRepository.save(new AppUser(
@@ -226,6 +252,7 @@ class AppUserControllerSecurityIntegrationTest {
                 .andExpect(status().isOk());
     }
 
+    // Ce test verifie le comportement de shouldDenyUserFromModifyingAnotherProfileForm.
     @Test
     void shouldDenyUserFromModifyingAnotherProfileForm() throws Exception {
         AppUser owner = appUserRepository.save(new AppUser(
@@ -244,12 +271,14 @@ class AppUserControllerSecurityIntegrationTest {
                 .andExpect(status().isForbidden());
     }
 
+        // Ce test verifie le comportement de shouldReturnUnauthorizedForAnonymousModifyUserForm.
         @Test
         void shouldReturnUnauthorizedForAnonymousModifyUserForm() throws Exception {
                 mockMvc.perform(get("/modifyuser/{mail}", "any.user@imt-atlantique.fr"))
                                 .andExpect(status().isUnauthorized());
         }
 
+    // Ce test verifie le comportement de shouldReturnUnauthorizedForAnonymousModifyUserData.
     @Test
     void shouldReturnUnauthorizedForAnonymousModifyUserData() throws Exception {
         mockMvc.perform(post("/modifyuserdata")
@@ -259,6 +288,7 @@ class AppUserControllerSecurityIntegrationTest {
                 .andExpect(status().isUnauthorized());
     }
 
+    // Ce test verifie le comportement de shouldDenyUserFromModifyingAnotherProfileData.
     @Test
     void shouldDenyUserFromModifyingAnotherProfileData() throws Exception {
         AppUser owner = appUserRepository.save(new AppUser(
@@ -280,6 +310,7 @@ class AppUserControllerSecurityIntegrationTest {
                 .andExpect(status().isForbidden());
     }
 
+    // Ce test verifie le comportement de shouldAllowUserToModifyOwnProfileData.
     @Test
     void shouldAllowUserToModifyOwnProfileData() throws Exception {
         AppUser user = appUserRepository.save(new AppUser(
@@ -299,6 +330,7 @@ class AppUserControllerSecurityIntegrationTest {
         assertEquals("newpwd", reloaded.getPassword());
     }
 
+    // Ce test verifie le comportement de shouldAllowAdminToModifyAnotherProfileData.
     @Test
     void shouldAllowAdminToModifyAnotherProfileData() throws Exception {
         AppUser other = appUserRepository.save(new AppUser(
@@ -318,6 +350,7 @@ class AppUserControllerSecurityIntegrationTest {
         assertEquals("adminset", reloaded.getPassword());
     }
 
+        // Ce test verifie le comportement de shouldRedirectWhenModifyUserDataPasswordIsTooShort.
         @Test
         void shouldRedirectWhenModifyUserDataPasswordIsTooShort() throws Exception {
                 AppUser user = appUserRepository.save(new AppUser(
@@ -335,6 +368,7 @@ class AppUserControllerSecurityIntegrationTest {
                                 .andExpect(redirectedUrl("/modifyuser/" + user.getMail() + "?error=password-short"));
         }
 
+        // Ce test verifie le comportement de shouldRedirectWhenModifyUserDataPasswordMismatch.
         @Test
         void shouldRedirectWhenModifyUserDataPasswordMismatch() throws Exception {
                 AppUser user = appUserRepository.save(new AppUser(
@@ -352,6 +386,7 @@ class AppUserControllerSecurityIntegrationTest {
                                 .andExpect(redirectedUrl("/modifyuser/" + user.getMail() + "?error=passwords-mismatch"));
         }
 
+    // Ce test verifie le comportement de buildSession.
     private MockHttpSession buildSession(String mail, AppUser.UserType userType) {
         MockHttpSession session = new MockHttpSession();
         session.setAttribute("userMail", mail);

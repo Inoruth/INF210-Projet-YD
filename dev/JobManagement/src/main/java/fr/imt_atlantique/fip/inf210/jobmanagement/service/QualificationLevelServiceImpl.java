@@ -1,5 +1,4 @@
 package fr.imt_atlantique.fip.inf210.jobmanagement.service;
-
 import org.springframework.stereotype.Service;
 import fr.imt_atlantique.fip.inf210.jobmanagement.entity.QualificationLevel;
 import fr.imt_atlantique.fip.inf210.jobmanagement.repository.QualificationLevelRepository;

@@ -1,4 +1,3 @@
-
 // Handle login form submission
 function handleLogin(event) {
     event.preventDefault();

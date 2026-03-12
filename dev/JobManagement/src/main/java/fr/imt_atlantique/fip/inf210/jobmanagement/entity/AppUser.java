@@ -1,5 +1,13 @@
 package fr.imt_atlantique.fip.inf210.jobmanagement.entity;
 
+/*
+ * Fichier: AppUser
+ * Cette classe represente une entite persistante du domaine metier.
+ * Les annotations JPA decrivent le mapping table, colonnes et relations.
+ * Elle transporte les donnees entre la base de donnees et la couche service.
+ * Son contenu doit rester coherent avec le schema et les contraintes de persistance.
+ */
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -44,10 +52,12 @@ public class AppUser {
         this.usertype = usertype;
     }
 
+    // Cette methode implemente l operation getId.
     public Integer getId() {
         return id;
     }
 
+    // Cette methode implemente l operation setId.
     public void setId(Integer id) {
         this.id = id;
     }
@@ -57,26 +67,32 @@ public class AppUser {
         return mail;
     }
     
+    // Cette methode implemente l operation setMail.
     public void setMail(String mail) {
         this.mail = mail;
     }
     
+    // Cette methode implemente l operation getPassword.
     public String getPassword() {
         return password;
     }
     
+    // Cette methode implemente l operation setPassword.
     public void setPassword(String password) {
         this.password = password;
     }
     
+    // Cette methode implemente l operation getUsertype.
     public UserType getUsertype() {
         return usertype;
     }
     
+    // Cette methode implemente l operation setUsertype.
     public void setUsertype(UserType usertype) {
         this.usertype = usertype;
     }
     
+    // Cette methode implemente l operation toString.
     @Override
     public String toString() {
         return "AppUser{" +

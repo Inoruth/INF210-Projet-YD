@@ -1,5 +1,13 @@
 package fr.imt_atlantique.fip.inf210.JobManagement.service;
 
+/*
+ * Fichier: QualificationLevelServiceTest
+ * Cette classe teste la logique du service en mode unitaire.
+ * Les dependances sont simulees pour isoler le comportement metier.
+ * Les scenarios couvrent les cas nominaux et les cas d'erreur.
+ * Les assertions verifient les resultats et les interactions attendues.
+ */
+
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -18,10 +26,12 @@ class QualificationLevelServiceTest {
     private final QualificationLevelRepository repository = mock(QualificationLevelRepository.class);
     private final QualificationLevelServiceImpl service = new QualificationLevelServiceImpl();
 
+    // Ce test verifie le comportement de setUp.
     private void setUp() {
         ReflectionTestUtils.setField(service, "qualificationLevelRepository", repository);
     }
 
+    // Ce test verifie le comportement de shouldReturnAllQualificationLevels.
     @Test
     void shouldReturnAllQualificationLevels() {
         setUp();
@@ -36,6 +46,7 @@ class QualificationLevelServiceTest {
         verify(repository).findAll();
     }
 
+    // Ce test verifie le comportement de shouldReturnNoQualificationLevelsWhenRepositoryIsEmpty.
     @Test
     void shouldReturnNoQualificationLevelsWhenRepositoryIsEmpty() {
         setUp();

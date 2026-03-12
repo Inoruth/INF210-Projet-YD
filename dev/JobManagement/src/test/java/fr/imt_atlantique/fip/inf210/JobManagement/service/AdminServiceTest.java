@@ -1,5 +1,13 @@
 package fr.imt_atlantique.fip.inf210.JobManagement.service;
 
+/*
+ * Fichier: AdminServiceTest
+ * Cette classe teste la logique du service en mode unitaire.
+ * Les dependances sont simulees pour isoler le comportement metier.
+ * Les scenarios couvrent les cas nominaux et les cas d'erreur.
+ * Les assertions verifient les resultats et les interactions attendues.
+ */
+
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -21,6 +29,7 @@ class AdminServiceTest {
     private final AdminJpaRepository repository = mock(AdminJpaRepository.class);
     private final AdminService service = new AdminServiceImpl(repository);
 
+    // Ce test verifie le comportement de shouldFindAdminByMail.
     @Test
     void shouldFindAdminByMail() {
         AppUser user = new AppUser("admin.service@imt-atlantique.fr", "pwd123", AppUser.UserType.admin);
@@ -33,6 +42,7 @@ class AdminServiceTest {
         verify(repository).findByAppUserMail("admin.service@imt-atlantique.fr");
     }
 
+    // Ce test verifie le comportement de shouldReturnEmptyWhenAdminMailUnknown.
     @Test
     void shouldReturnEmptyWhenAdminMailUnknown() {
         when(repository.findByAppUserMail("unknown.admin@imt-atlantique.fr")).thenReturn(Optional.empty());
@@ -43,6 +53,7 @@ class AdminServiceTest {
         verify(repository).findByAppUserMail("unknown.admin@imt-atlantique.fr");
     }
 
+    // Ce test verifie le comportement de shouldSaveAdmin.
     @Test
     void shouldSaveAdmin() {
         Admin admin = new Admin(new AppUser("admin.save@imt-atlantique.fr", "pwd123", AppUser.UserType.admin));

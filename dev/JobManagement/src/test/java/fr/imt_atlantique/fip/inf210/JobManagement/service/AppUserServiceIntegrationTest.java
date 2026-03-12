@@ -1,5 +1,13 @@
 package fr.imt_atlantique.fip.inf210.JobManagement.service;
 
+/*
+ * Fichier: AppUserServiceIntegrationTest
+ * Cette classe teste le service avec le contexte Spring complet.
+ * Elle valide l'integration entre la couche metier, les repositories et la base de test.
+ * Les scenarios verifies reproduisent les flux fonctionnels importants.
+ * Ces tests detectent les regressions entre couches applicatives.
+ */
+
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
@@ -31,6 +39,7 @@ class AppUserServiceIntegrationTest {
     @Autowired
     private CandidateJpaRepository candidateRepository;
 
+    // Ce test verifie le comportement de shouldDeleteApplicantButKeepAdmin.
     @Test
     void shouldDeleteApplicantButKeepAdmin() {
         AppUser admin = appUserRepository.save(new AppUser(
@@ -51,6 +60,7 @@ class AppUserServiceIntegrationTest {
         assertFalse(appUserRepository.findByMail(applicant.getMail()).isPresent());
     }
 
+    // Ce test verifie le comportement de shouldDeleteCompanyUserWithProfile.
     @Test
     void shouldDeleteCompanyUserWithProfile() {
         AppUser companyUser = appUserRepository.save(new AppUser(
@@ -66,6 +76,7 @@ class AppUserServiceIntegrationTest {
         assertTrue(companyRepository.findByAppUserMail(companyUser.getMail()).isEmpty());
     }
 
+    // Ce test verifie le comportement de shouldDeleteApplicantUserWithProfile.
     @Test
     void shouldDeleteApplicantUserWithProfile() {
         AppUser candidateUser = appUserRepository.save(new AppUser(

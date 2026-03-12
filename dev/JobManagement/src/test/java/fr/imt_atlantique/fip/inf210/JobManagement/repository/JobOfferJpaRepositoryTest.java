@@ -1,5 +1,13 @@
 package fr.imt_atlantique.fip.inf210.JobManagement.repository;
 
+/*
+ * Fichier: JobOfferJpaRepositoryTest
+ * Cette classe teste les requetes JPA du repository cible.
+ * Les tests s'executent sur une base de test pour valider la persistance et les recherches.
+ * Les assertions controlent la coherence des resultats retournes par les methodes.
+ * L'objectif est de securiser le mapping et le comportement des requetes.
+ */
+
 import java.util.List;
 import java.util.Set;
 
@@ -49,6 +57,7 @@ class JobOfferJpaRepositoryTest {
     @Autowired
     private SectorJpaRepository sectorRepository;
 
+    // Ce test verifie le comportement de shouldFindByCompanyAndOwnership.
     @Test
     void shouldFindByCompanyAndOwnership() {
         Company owner = createCompany("owner.company@imt-atlantique.fr", "Owner Company");
@@ -66,6 +75,7 @@ class JobOfferJpaRepositoryTest {
         assertFalse(jobOfferRepository.findByIdAndCompanyId(ownerOffer.getId(), other.getId()).isPresent());
     }
 
+    // Ce test verifie le comportement de shouldSearchByCriteria.
     @Test
     void shouldSearchByCriteria() {
         Company company = createCompany("criteria.company@imt-atlantique.fr", "Criteria Company");
@@ -84,6 +94,7 @@ class JobOfferJpaRepositoryTest {
         assertEquals(offerHighIt.getId(), filtered.get(0).getId());
     }
 
+    // Ce test verifie le comportement de shouldFindMatchingByApplication.
     @Test
     void shouldFindMatchingByApplication() {
         Company company = createCompany("matching.company@imt-atlantique.fr", "Matching Company");
@@ -108,30 +119,36 @@ class JobOfferJpaRepositoryTest {
         assertEquals(expected.getId(), matches.get(0).getId());
     }
 
+    // Ce test verifie le comportement de createCompany.
     private Company createCompany(String mail, String denomination) {
         AppUser user = appUserRepository.save(new AppUser(mail, "pwd123", AppUser.UserType.company));
         return companyRepository.save(new Company(user, denomination, "description", "Brest"));
     }
 
+    // Ce test verifie le comportement de createCandidate.
     private Candidate createCandidate(String mail, String lastname) {
         AppUser user = appUserRepository.save(new AppUser(mail, "pwd123", AppUser.UserType.applicant));
         return candidateRepository.save(new Candidate(user, lastname, "Alice", "Rennes"));
     }
 
+    // Ce test verifie le comportement de createQualification.
     private QualificationLevel createQualification(String label, short rank) {
         return qualificationLevelRepository.save(new QualificationLevel(label, rank));
     }
 
+    // Ce test verifie le comportement de createSector.
     private Sector createSector(String label) {
         return sectorRepository.save(new Sector(label));
     }
 
+    // Ce test verifie le comportement de createOffer.
     private JobOffer createOffer(Company company, QualificationLevel level, String title, Set<Sector> sectors) {
         JobOffer offer = new JobOffer(title, "Task for " + title, company, level);
         offer.setSectors(sectors);
         return jobOfferRepository.save(offer);
     }
 
+    // Ce test verifie le comportement de createApplication.
     private Application createApplication(Candidate candidate, QualificationLevel level, Set<Sector> sectors) {
         Application application = new Application("CV", candidate, level);
         application.setSectors(sectors);

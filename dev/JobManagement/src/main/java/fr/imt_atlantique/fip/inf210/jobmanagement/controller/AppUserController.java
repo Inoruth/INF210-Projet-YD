@@ -1,5 +1,13 @@
 package fr.imt_atlantique.fip.inf210.jobmanagement.controller;
 
+/*
+ * Fichier: AppUserController
+ * Cette classe centralise les endpoints HTTP du module.
+ * Elle lit les donnees de la requete, valide les entrees et controle les droits d'acces.
+ * Elle construit la reponse (JSON, vue Thymeleaf ou redirection) selon le contexte.
+ * La logique metier est deleguee aux services et repositories.
+ */
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -49,6 +57,7 @@ public class AppUserController {
     private CandidateJpaRepository candidateRepository;
 
 
+    // Cette methode implemente l operation login.
     @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> credentials, HttpSession session) {
         Map<String, Object> response = new HashMap<>();
@@ -89,6 +98,7 @@ public class AppUserController {
         return ResponseEntity.ok(response);
     }
     
+    // Cette methode implemente l operation logout.
     @PostMapping("/logout")
     public String logout(HttpSession session) {
         // Invalidate session
@@ -96,6 +106,7 @@ public class AppUserController {
         return "redirect:/";
     }
 
+    // Cette methode implemente l operation getAddUserForm.
     @GetMapping("/adduser")
     public String getAddUserForm(HttpSession session){
         requireAdmin(session);
@@ -177,6 +188,7 @@ public class AppUserController {
     }
     
 
+    // Cette methode implemente l operation deleteUser.
     @PostMapping("/deleteuser")
     public String deleteUser(@RequestParam("mail") String mail, HttpSession session) {
         requireAdmin(session);
@@ -186,6 +198,7 @@ public class AppUserController {
         return "redirect:/manageusers?success=user-deleted";
     }
 
+    // Cette methode implemente l operation listUsersAndActions.
     @GetMapping("/manageusers")
     public ModelAndView listUsersAndActions(HttpSession session) {
         requireAdmin(session);
@@ -195,6 +208,7 @@ public class AppUserController {
         return mav;
     }
     
+    // Cette methode implemente l operation getModifyUserForm.
     @GetMapping("/modifyuser/{mail}")
     public ModelAndView getModifyUserForm(@PathVariable String mail, HttpSession session) {
         requireSelfOrAdmin(session, mail);
@@ -254,6 +268,7 @@ public class AppUserController {
         }
     }
 
+    // Cette methode implemente l operation deriveDefaultProfileName.
     private String deriveDefaultProfileName(String mail, int maxLength) {
         if (mail == null || mail.isBlank()) {
             return "unknown";
@@ -272,15 +287,18 @@ public class AppUserController {
         return baseName;
     }
 
+    // Cette methode implemente l operation requireAdmin.
     private void requireAdmin(HttpSession session) {
         requireAuthenticated(session);
 
         String userType = (String) session.getAttribute("userType");
         if (!AppUser.UserType.admin.name().equalsIgnoreCase(userType)) {
+            // Cette methode implemente l operation ResponseStatusException.
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Admin access required");
         }
     }
 
+    // Cette methode implemente l operation requireSelfOrAdmin.
     private void requireSelfOrAdmin(HttpSession session, String targetMail) {
         requireAuthenticated(session);
 
@@ -289,12 +307,15 @@ public class AppUserController {
         boolean isAdmin = AppUser.UserType.admin.name().equalsIgnoreCase(userType);
 
         if (!isAdmin && !sessionMail.equalsIgnoreCase(targetMail)) {
+            // Cette methode implemente l operation ResponseStatusException.
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You cannot modify another user");
         }
     }
 
+    // Cette methode implemente l operation requireAuthenticated.
     private void requireAuthenticated(HttpSession session) {
         if (session == null) {
+            // Cette methode implemente l operation ResponseStatusException.
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
         }
 
@@ -302,6 +323,7 @@ public class AppUserController {
         Object userType = session.getAttribute("userType");
         if (!(sessionMail instanceof String mail) || mail.isBlank()
                 || !(userType instanceof String type) || type.isBlank()) {
+            // Cette methode implemente l operation ResponseStatusException.
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
         }
     }

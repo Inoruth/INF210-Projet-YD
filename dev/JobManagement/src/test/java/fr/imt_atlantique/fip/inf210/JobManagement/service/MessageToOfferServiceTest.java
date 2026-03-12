@@ -1,5 +1,13 @@
 package fr.imt_atlantique.fip.inf210.JobManagement.service;
 
+/*
+ * Fichier: MessageToOfferServiceTest
+ * Cette classe teste la logique du service en mode unitaire.
+ * Les dependances sont simulees pour isoler le comportement metier.
+ * Les scenarios couvrent les cas nominaux et les cas d'erreur.
+ * Les assertions verifient les resultats et les interactions attendues.
+ */
+
 import java.util.List;
 import java.util.Optional;
 
@@ -21,6 +29,7 @@ class MessageToOfferServiceTest {
     private final MessageToOfferJpaRepository repository = mock(MessageToOfferJpaRepository.class);
     private final MessageToOfferService service = new MessageToOfferServiceImpl(repository);
 
+    // Ce test verifie le comportement de shouldFindByOfferAndApplicationPair.
     @Test
     void shouldFindByOfferAndApplicationPair() {
         MessageToOffer message = new MessageToOffer();
@@ -32,6 +41,7 @@ class MessageToOfferServiceTest {
         verify(repository).findByJobOfferIdAndApplicationId(1, 2);
     }
 
+    // Ce test verifie le comportement de shouldReturnEmptyForUnknownOfferAndApplicationPair.
     @Test
     void shouldReturnEmptyForUnknownOfferAndApplicationPair() {
         when(repository.findByJobOfferIdAndApplicationId(1, 99)).thenReturn(Optional.empty());
@@ -42,6 +52,7 @@ class MessageToOfferServiceTest {
         verify(repository).findByJobOfferIdAndApplicationId(1, 99);
     }
 
+    // Ce test verifie le comportement de shouldListByCompany.
     @Test
     void shouldListByCompany() {
         when(repository.findByJobOfferCompanyIdOrderByPublicationdateDesc(3))
@@ -53,6 +64,7 @@ class MessageToOfferServiceTest {
         verify(repository).findByJobOfferCompanyIdOrderByPublicationdateDesc(3);
     }
 
+    // Ce test verifie le comportement de shouldReturnEmptyListWhenCompanyHasNoOfferMessages.
     @Test
     void shouldReturnEmptyListWhenCompanyHasNoOfferMessages() {
         when(repository.findByJobOfferCompanyIdOrderByPublicationdateDesc(99)).thenReturn(List.of());
@@ -63,6 +75,7 @@ class MessageToOfferServiceTest {
         verify(repository).findByJobOfferCompanyIdOrderByPublicationdateDesc(99);
     }
 
+    // Ce test verifie le comportement de shouldListByCandidate.
     @Test
     void shouldListByCandidate() {
         when(repository.findByApplicationCandidateIdOrderByPublicationdateDesc(4))
@@ -74,6 +87,7 @@ class MessageToOfferServiceTest {
         verify(repository).findByApplicationCandidateIdOrderByPublicationdateDesc(4);
     }
 
+    // Ce test verifie le comportement de shouldSaveMessageToOffer.
     @Test
     void shouldSaveMessageToOffer() {
         MessageToOffer message = new MessageToOffer();

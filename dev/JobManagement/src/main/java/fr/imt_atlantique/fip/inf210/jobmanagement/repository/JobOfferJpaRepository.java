@@ -1,5 +1,13 @@
 package fr.imt_atlantique.fip.inf210.jobmanagement.repository;
 
+/*
+ * Fichier: JobOfferJpaRepository
+ * Cette interface est un repository Spring Data JPA.
+ * Elle fournit l'acces aux donnees pour l'entite concernee.
+ * Les methodes declarees ici sont utilisees pour les operations de lecture et d'ecriture.
+ * La couche service utilise ce repository pour interagir avec la base.
+ */
+
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -14,8 +22,10 @@ import fr.imt_atlantique.fip.inf210.jobmanagement.entity.JobOffer;
 @Repository
 public interface JobOfferJpaRepository extends JpaRepository<JobOffer, Integer> {
 
+	// Cette methode implemente l operation findByCompanyIdOrderByPublicationdateDesc.
 	List<JobOffer> findByCompanyIdOrderByPublicationdateDesc(Integer companyId);
 
+	// Cette methode implemente l operation findByIdAndCompanyId.
 	Optional<JobOffer> findByIdAndCompanyId(Integer id, Integer companyId);
 
 	@Query("""
@@ -47,5 +57,6 @@ public interface JobOfferJpaRepository extends JpaRepository<JobOffer, Integer> 
 			)
 			order by jo.publicationdate desc
 			""")
+	// Cette methode implemente l operation findMatchingByApplicationId.
 	List<JobOffer> findMatchingByApplicationId(@Param("applicationId") Integer applicationId);
 }

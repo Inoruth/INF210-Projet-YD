@@ -1,5 +1,13 @@
 package fr.imt_atlantique.fip.inf210.JobManagement.repository;
 
+/*
+ * Fichier: AppUserJpaRepositoryTest
+ * Cette classe teste les requetes JPA du repository cible.
+ * Les tests s'executent sur une base de test pour valider la persistance et les recherches.
+ * Les assertions controlent la coherence des resultats retournes par les methodes.
+ * L'objectif est de securiser le mapping et le comportement des requetes.
+ */
+
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -18,6 +26,7 @@ class AppUserJpaRepositoryTest {
     @Autowired
     private AppUserJpaRepository appUserRepository;
 
+    // Ce test verifie le comportement de shouldSaveAndFindByMail.
     @Test
     void shouldSaveAndFindByMail() {
         AppUser user = new AppUser("repo.test@imt-atlantique.fr", "pwd123", AppUser.UserType.applicant);
@@ -30,6 +39,7 @@ class AppUserJpaRepositoryTest {
         assertEquals(AppUser.UserType.applicant, found.get().getUsertype());
     }
 
+    // Ce test verifie le comportement de shouldReturnTrueWhenMailExists.
     @Test
     void shouldReturnTrueWhenMailExists() {
         AppUser user = new AppUser("exists.test@imt-atlantique.fr", "pwd123", AppUser.UserType.company);

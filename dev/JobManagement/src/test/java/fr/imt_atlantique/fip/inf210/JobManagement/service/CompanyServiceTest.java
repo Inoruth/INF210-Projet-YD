@@ -1,5 +1,13 @@
 package fr.imt_atlantique.fip.inf210.JobManagement.service;
 
+/*
+ * Fichier: CompanyServiceTest
+ * Cette classe teste la logique du service en mode unitaire.
+ * Les dependances sont simulees pour isoler le comportement metier.
+ * Les scenarios couvrent les cas nominaux et les cas d'erreur.
+ * Les assertions verifient les resultats et les interactions attendues.
+ */
+
 import java.util.List;
 import java.util.Optional;
 
@@ -21,6 +29,7 @@ class CompanyServiceTest {
     private final CompanyJpaRepository repository = mock(CompanyJpaRepository.class);
     private final CompanyService service = new CompanyServiceImpl(repository);
 
+    // Ce test verifie le comportement de shouldFindByMail.
     @Test
     void shouldFindByMail() {
         Company company = new Company();
@@ -34,6 +43,7 @@ class CompanyServiceTest {
         verify(repository).findByAppUserMail("company.service@imt-atlantique.fr");
     }
 
+    // Ce test verifie le comportement de shouldReturnEmptyWhenCompanyMailUnknown.
     @Test
     void shouldReturnEmptyWhenCompanyMailUnknown() {
         when(repository.findByAppUserMail("unknown.company@imt-atlantique.fr")).thenReturn(Optional.empty());
@@ -44,6 +54,7 @@ class CompanyServiceTest {
         verify(repository).findByAppUserMail("unknown.company@imt-atlantique.fr");
     }
 
+    // Ce test verifie le comportement de shouldSearchByDenomination.
     @Test
     void shouldSearchByDenomination() {
         when(repository.findByDenominationContainingIgnoreCaseOrderByDenominationAsc("ac"))
@@ -55,6 +66,7 @@ class CompanyServiceTest {
         verify(repository).findByDenominationContainingIgnoreCaseOrderByDenominationAsc("ac");
     }
 
+    // Ce test verifie le comportement de shouldReturnNoCompanyWhenDenominationSearchHasNoMatch.
     @Test
     void shouldReturnNoCompanyWhenDenominationSearchHasNoMatch() {
         when(repository.findByDenominationContainingIgnoreCaseOrderByDenominationAsc("zzz"))
@@ -66,6 +78,7 @@ class CompanyServiceTest {
         verify(repository).findByDenominationContainingIgnoreCaseOrderByDenominationAsc("zzz");
     }
 
+    // Ce test verifie le comportement de shouldFindAllCompanies.
     @Test
     void shouldFindAllCompanies() {
         when(repository.findAll()).thenReturn(List.of(new Company(), new Company(), new Company()));
@@ -76,6 +89,7 @@ class CompanyServiceTest {
         verify(repository).findAll();
     }
 
+    // Ce test verifie le comportement de shouldSaveCompany.
     @Test
     void shouldSaveCompany() {
         Company company = new Company();

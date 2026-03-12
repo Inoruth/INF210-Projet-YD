@@ -1,5 +1,13 @@
 package fr.imt_atlantique.fip.inf210.JobManagement.repository;
 
+/*
+ * Fichier: AdminJpaRepositoryTest
+ * Cette classe teste les requetes JPA du repository cible.
+ * Les tests s'executent sur une base de test pour valider la persistance et les recherches.
+ * Les assertions controlent la coherence des resultats retournes par les methodes.
+ * L'objectif est de securiser le mapping et le comportement des requetes.
+ */
+
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -22,6 +30,7 @@ class AdminJpaRepositoryTest {
     @Autowired
     private AppUserJpaRepository appUserRepository;
 
+    // Ce test verifie le comportement de shouldFindAdminByAppUserMail.
     @Test
     void shouldFindAdminByAppUserMail() {
         AppUser user = appUserRepository.save(new AppUser(

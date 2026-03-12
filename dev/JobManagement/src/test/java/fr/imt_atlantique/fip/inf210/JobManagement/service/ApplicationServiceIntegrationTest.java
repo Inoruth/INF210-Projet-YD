@@ -1,5 +1,13 @@
 package fr.imt_atlantique.fip.inf210.JobManagement.service;
 
+/*
+ * Fichier: ApplicationServiceIntegrationTest
+ * Cette classe teste le service avec le contexte Spring complet.
+ * Elle valide l'integration entre la couche metier, les repositories et la base de test.
+ * Les scenarios verifies reproduisent les flux fonctionnels importants.
+ * Ces tests detectent les regressions entre couches applicatives.
+ */
+
 import java.util.List;
 import java.util.Set;
 
@@ -55,6 +63,7 @@ class ApplicationServiceIntegrationTest {
     @Autowired
     private MessageToApplicationJpaRepository messageToApplicationRepository;
 
+    // Ce test verifie le comportement de shouldSearchApplicationsByCriteriaThroughService.
     @Test
     void shouldSearchApplicationsByCriteriaThroughService() {
         Candidate candidate = createCandidate("integration.app.candidate@imt-atlantique.fr", "Durand");
@@ -73,6 +82,7 @@ class ApplicationServiceIntegrationTest {
         assertEquals("Expected CV", applications.get(0).getCv());
     }
 
+    // Ce test verifie le comportement de shouldFindMatchingApplicationsForOfferThroughService.
     @Test
     void shouldFindMatchingApplicationsForOfferThroughService() {
         Candidate candidate = createCandidate("integration.app.match.candidate@imt-atlantique.fr", "Martin");
@@ -96,6 +106,7 @@ class ApplicationServiceIntegrationTest {
         assertEquals("Matching CV", matches.get(0).getCv());
     }
 
+    // Ce test verifie le comportement de shouldDeleteOnlyOwnedApplicationThroughService.
     @Test
     void shouldDeleteOnlyOwnedApplicationThroughService() {
         Candidate owner = createCandidate("integration.app.owner@imt-atlantique.fr", "Owner");
@@ -111,6 +122,7 @@ class ApplicationServiceIntegrationTest {
         assertFalse(applicationService.findById(application.getId()).isPresent());
     }
 
+    // Ce test verifie le comportement de shouldSendAutomaticMessageWhenPublishingApplication.
     @Test
     void shouldSendAutomaticMessageWhenPublishingApplication() {
         Candidate candidate = createCandidate("integration.app.auto.candidate@imt-atlantique.fr", "AutoCandidate");
@@ -129,22 +141,26 @@ class ApplicationServiceIntegrationTest {
         assertTrue(message.get().getMessage().startsWith("Automatic message:"));
     }
 
+    // Ce test verifie le comportement de createCandidate.
     private Candidate createCandidate(String mail, String lastname) {
         AppUser user = appUserRepository.save(new AppUser(mail, "pwd123", AppUser.UserType.applicant));
         return candidateRepository.save(new Candidate(user, lastname, "Alice", "Rennes"));
     }
 
+    // Ce test verifie le comportement de createCompany.
     private Company createCompany(String mail, String denomination) {
         AppUser user = appUserRepository.save(new AppUser(mail, "pwd123", AppUser.UserType.company));
         return companyRepository.save(new Company(user, denomination, "description", "Brest"));
     }
 
+    // Ce test verifie le comportement de createApplication.
     private Application createApplication(Candidate candidate, QualificationLevel level, Set<Sector> sectors, String cv) {
         Application application = new Application(cv, candidate, level);
         application.setSectors(sectors);
         return applicationService.save(application);
     }
 
+    // Ce test verifie le comportement de createOffer.
     private JobOffer createOffer(Company company, QualificationLevel level, Set<Sector> sectors) {
         JobOffer offer = new JobOffer("Offer", "Task", company, level);
         offer.setSectors(sectors);

@@ -1,5 +1,13 @@
 package fr.imt_atlantique.fip.inf210.JobManagement.repository;
 
+/*
+ * Fichier: CandidateJpaRepositoryTest
+ * Cette classe teste les requetes JPA du repository cible.
+ * Les tests s'executent sur une base de test pour valider la persistance et les recherches.
+ * Les assertions controlent la coherence des resultats retournes par les methodes.
+ * L'objectif est de securiser le mapping et le comportement des requetes.
+ */
+
 import java.util.List;
 import java.util.Optional;
 
@@ -23,6 +31,7 @@ class CandidateJpaRepositoryTest {
     @Autowired
     private AppUserJpaRepository appUserRepository;
 
+    // Ce test verifie le comportement de shouldFindCandidateByAppUserMail.
     @Test
     void shouldFindCandidateByAppUserMail() {
         AppUser user = appUserRepository.save(new AppUser(
@@ -38,6 +47,7 @@ class CandidateJpaRepositoryTest {
         assertEquals("Durand", found.get().getLastname());
     }
 
+    // Ce test verifie le comportement de shouldSearchCandidatesByLastname.
     @Test
     void shouldSearchCandidatesByLastname() {
         createCandidate("candidate.one@imt-atlantique.fr", "Dubois", "Zoe");
@@ -52,6 +62,7 @@ class CandidateJpaRepositoryTest {
         assertEquals("Dumas", candidates.get(1).getLastname());
     }
 
+    // Ce test verifie le comportement de createCandidate.
     private void createCandidate(String mail, String lastname, String firstname) {
         AppUser user = appUserRepository.save(new AppUser(mail, "pwd123", AppUser.UserType.applicant));
         candidateRepository.save(new Candidate(user, lastname, firstname, "Rennes"));

@@ -1,5 +1,13 @@
 package fr.imt_atlantique.fip.inf210.JobManagement.service;
 
+/*
+ * Fichier: AppUserServiceTest
+ * Cette classe teste la logique du service en mode unitaire.
+ * Les dependances sont simulees pour isoler le comportement metier.
+ * Les scenarios couvrent les cas nominaux et les cas d'erreur.
+ * Les assertions verifient les resultats et les interactions attendues.
+ */
+
 import java.util.List;
 import java.util.Optional;
 
@@ -32,6 +40,7 @@ class AppUserServiceTest {
     private final CandidateJpaRepository candidateRepository = mock(CandidateJpaRepository.class);
     private final AppUserService service = new AppUserServiceImpl(repository, companyRepository, candidateRepository);
 
+    // Ce test verifie le comportement de shouldFindByMail.
     @Test
     void shouldFindByMail() {
         AppUser user = new AppUser("svc.test@imt-atlantique.fr", "pwd", AppUser.UserType.admin);
@@ -43,6 +52,7 @@ class AppUserServiceTest {
         assertEquals("svc.test@imt-atlantique.fr", found.get().getMail());
     }
 
+    // Ce test verifie le comportement de shouldReturnEmptyWhenMailIsUnknown.
     @Test
     void shouldReturnEmptyWhenMailIsUnknown() {
         when(repository.findByMail("unknown.service@imt-atlantique.fr")).thenReturn(Optional.empty());
@@ -52,6 +62,7 @@ class AppUserServiceTest {
         assertFalse(found.isPresent());
     }
 
+    // Ce test verifie le comportement de shouldSaveUser.
     @Test
     void shouldSaveUser() {
         AppUser user = new AppUser("save.service@imt-atlantique.fr", "pwd", AppUser.UserType.company);
@@ -63,6 +74,7 @@ class AppUserServiceTest {
         verify(repository).save(user);
     }
 
+    // Ce test verifie le comportement de shouldDeleteByMailWhenUserExists.
     @Test
     void shouldDeleteByMailWhenUserExists() {
         AppUser user = new AppUser("delete.test@imt-atlantique.fr", "pwd", AppUser.UserType.applicant);
@@ -75,6 +87,7 @@ class AppUserServiceTest {
         verify(repository, times(1)).delete(user);
     }
 
+    // Ce test verifie le comportement de shouldDeleteCompanyProfileBeforeUser.
     @Test
     void shouldDeleteCompanyProfileBeforeUser() {
         AppUser user = new AppUser("company.delete@imt-atlantique.fr", "pwd", AppUser.UserType.company);
@@ -92,6 +105,7 @@ class AppUserServiceTest {
         inOrder.verify(repository).delete(user);
     }
 
+    // Ce test verifie le comportement de shouldDeleteApplicantProfileBeforeUser.
     @Test
     void shouldDeleteApplicantProfileBeforeUser() {
         AppUser user = new AppUser("candidate.delete@imt-atlantique.fr", "pwd", AppUser.UserType.applicant);
@@ -109,6 +123,7 @@ class AppUserServiceTest {
         inOrder.verify(repository).delete(user);
     }
 
+    // Ce test verifie le comportement de shouldDeleteCompanyUserWhenNoCompanyProfileExists.
     @Test
     void shouldDeleteCompanyUserWhenNoCompanyProfileExists() {
         AppUser user = new AppUser("company.noprofile@imt-atlantique.fr", "pwd", AppUser.UserType.company);
@@ -121,6 +136,7 @@ class AppUserServiceTest {
         verify(repository).delete(user);
     }
 
+    // Ce test verifie le comportement de shouldNotDeleteAdminUser.
     @Test
     void shouldNotDeleteAdminUser() {
         AppUser admin = new AppUser("admin.test@imt-atlantique.fr", "pwd", AppUser.UserType.admin);
@@ -132,6 +148,7 @@ class AppUserServiceTest {
         verifyNoInteractions(companyRepository, candidateRepository);
     }
 
+    // Ce test verifie le comportement de shouldDoNothingWhenDeletingUnknownUser.
     @Test
     void shouldDoNothingWhenDeletingUnknownUser() {
         when(repository.findByMail("unknown@imt-atlantique.fr")).thenReturn(Optional.empty());
@@ -142,6 +159,7 @@ class AppUserServiceTest {
         verifyNoInteractions(companyRepository, candidateRepository);
     }
 
+    // Ce test verifie le comportement de shouldReturnAllUsers.
     @Test
     void shouldReturnAllUsers() {
         when(repository.findAll()).thenReturn(List.of(

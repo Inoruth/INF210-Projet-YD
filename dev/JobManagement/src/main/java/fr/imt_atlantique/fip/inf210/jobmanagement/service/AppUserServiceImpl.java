@@ -1,5 +1,13 @@
 package fr.imt_atlantique.fip.inf210.jobmanagement.service;
 
+/*
+ * Fichier: AppUserServiceImpl
+ * Cette classe implemente les operations metier du service.
+ * Elle orchestre les repositories pour appliquer les regles fonctionnelles du domaine.
+ * Elle traite les cas limites (donnees absentes, contraintes metier, dependances).
+ * Les controllers s'appuient sur cette implementation pour executer les actions metier.
+ */
+
 import java.util.List;
 import java.util.Optional;
 
@@ -28,16 +36,19 @@ public class AppUserServiceImpl implements AppUserService {
         this.candidateRepository = candidateRepository;
     }
 
+    // Cette methode implemente l operation findByMail.
     @Override
     public Optional<AppUser> findByMail(String mail) {
         return appUserRepository.findByMail(mail);
     }
 
+    // Cette methode implemente l operation save.
     @Override
     public AppUser save(AppUser user) {
         return appUserRepository.save(user);
     }
 
+    // Cette methode implemente l operation deleteByMail.
     @Override
     public void deleteByMail(String mail) {
         appUserRepository.findByMail(mail)
@@ -56,6 +67,7 @@ public class AppUserServiceImpl implements AppUserService {
                 });
     }
 
+    // Cette methode implemente l operation findAll.
     @Override
     public List<AppUser> findAll() {
         return appUserRepository.findAll();

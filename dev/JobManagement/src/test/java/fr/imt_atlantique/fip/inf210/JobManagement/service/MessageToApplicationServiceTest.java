@@ -1,5 +1,13 @@
 package fr.imt_atlantique.fip.inf210.JobManagement.service;
 
+/*
+ * Fichier: MessageToApplicationServiceTest
+ * Cette classe teste la logique du service en mode unitaire.
+ * Les dependances sont simulees pour isoler le comportement metier.
+ * Les scenarios couvrent les cas nominaux et les cas d'erreur.
+ * Les assertions verifient les resultats et les interactions attendues.
+ */
+
 import java.util.List;
 import java.util.Optional;
 
@@ -21,6 +29,7 @@ class MessageToApplicationServiceTest {
     private final MessageToApplicationJpaRepository repository = mock(MessageToApplicationJpaRepository.class);
     private final MessageToApplicationService service = new MessageToApplicationServiceImpl(repository);
 
+    // Ce test verifie le comportement de shouldFindByApplicationAndOfferPair.
     @Test
     void shouldFindByApplicationAndOfferPair() {
         MessageToApplication message = new MessageToApplication();
@@ -32,6 +41,7 @@ class MessageToApplicationServiceTest {
         verify(repository).findByApplicationIdAndJobOfferId(1, 2);
     }
 
+    // Ce test verifie le comportement de shouldReturnEmptyForUnknownApplicationAndOfferPair.
     @Test
     void shouldReturnEmptyForUnknownApplicationAndOfferPair() {
         when(repository.findByApplicationIdAndJobOfferId(1, 99)).thenReturn(Optional.empty());
@@ -42,6 +52,7 @@ class MessageToApplicationServiceTest {
         verify(repository).findByApplicationIdAndJobOfferId(1, 99);
     }
 
+    // Ce test verifie le comportement de shouldListByCandidate.
     @Test
     void shouldListByCandidate() {
         when(repository.findByApplicationCandidateIdOrderByPublicationdateDesc(3))
@@ -53,6 +64,7 @@ class MessageToApplicationServiceTest {
         verify(repository).findByApplicationCandidateIdOrderByPublicationdateDesc(3);
     }
 
+    // Ce test verifie le comportement de shouldReturnEmptyListWhenCandidateHasNoApplicationMessages.
     @Test
     void shouldReturnEmptyListWhenCandidateHasNoApplicationMessages() {
         when(repository.findByApplicationCandidateIdOrderByPublicationdateDesc(99)).thenReturn(List.of());
@@ -63,6 +75,7 @@ class MessageToApplicationServiceTest {
         verify(repository).findByApplicationCandidateIdOrderByPublicationdateDesc(99);
     }
 
+    // Ce test verifie le comportement de shouldListByCompany.
     @Test
     void shouldListByCompany() {
         when(repository.findByJobOfferCompanyIdOrderByPublicationdateDesc(4))
@@ -74,6 +87,7 @@ class MessageToApplicationServiceTest {
         verify(repository).findByJobOfferCompanyIdOrderByPublicationdateDesc(4);
     }
 
+    // Ce test verifie le comportement de shouldSaveMessageToApplication.
     @Test
     void shouldSaveMessageToApplication() {
         MessageToApplication message = new MessageToApplication();

@@ -1,5 +1,13 @@
 package fr.imt_atlantique.fip.inf210.JobManagement.service;
 
+/*
+ * Fichier: CandidateServiceTest
+ * Cette classe teste la logique du service en mode unitaire.
+ * Les dependances sont simulees pour isoler le comportement metier.
+ * Les scenarios couvrent les cas nominaux et les cas d'erreur.
+ * Les assertions verifient les resultats et les interactions attendues.
+ */
+
 import java.util.List;
 import java.util.Optional;
 
@@ -21,6 +29,7 @@ class CandidateServiceTest {
     private final CandidateJpaRepository repository = mock(CandidateJpaRepository.class);
     private final CandidateService service = new CandidateServiceImpl(repository);
 
+    // Ce test verifie le comportement de shouldFindByMail.
     @Test
     void shouldFindByMail() {
         Candidate candidate = new Candidate();
@@ -34,6 +43,7 @@ class CandidateServiceTest {
         verify(repository).findByAppUserMail("candidate.service@imt-atlantique.fr");
     }
 
+    // Ce test verifie le comportement de shouldReturnEmptyWhenCandidateMailUnknown.
     @Test
     void shouldReturnEmptyWhenCandidateMailUnknown() {
         when(repository.findByAppUserMail("unknown.candidate@imt-atlantique.fr")).thenReturn(Optional.empty());
@@ -44,6 +54,7 @@ class CandidateServiceTest {
         verify(repository).findByAppUserMail("unknown.candidate@imt-atlantique.fr");
     }
 
+    // Ce test verifie le comportement de shouldSearchByLastname.
     @Test
     void shouldSearchByLastname() {
         when(repository.findByLastnameContainingIgnoreCaseOrderByLastnameAsc("du"))
@@ -55,6 +66,7 @@ class CandidateServiceTest {
         verify(repository).findByLastnameContainingIgnoreCaseOrderByLastnameAsc("du");
     }
 
+    // Ce test verifie le comportement de shouldReturnNoCandidateWhenLastnameSearchHasNoMatch.
     @Test
     void shouldReturnNoCandidateWhenLastnameSearchHasNoMatch() {
         when(repository.findByLastnameContainingIgnoreCaseOrderByLastnameAsc("zzz"))
@@ -66,6 +78,7 @@ class CandidateServiceTest {
         verify(repository).findByLastnameContainingIgnoreCaseOrderByLastnameAsc("zzz");
     }
 
+    // Ce test verifie le comportement de shouldFindAllCandidates.
     @Test
     void shouldFindAllCandidates() {
         when(repository.findAll()).thenReturn(List.of(new Candidate(), new Candidate()));
@@ -76,6 +89,7 @@ class CandidateServiceTest {
         verify(repository).findAll();
     }
 
+    // Ce test verifie le comportement de shouldSaveCandidate.
     @Test
     void shouldSaveCandidate() {
         Candidate candidate = new Candidate();

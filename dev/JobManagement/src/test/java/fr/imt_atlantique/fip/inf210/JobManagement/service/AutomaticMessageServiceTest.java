@@ -1,5 +1,13 @@
 package fr.imt_atlantique.fip.inf210.JobManagement.service;
 
+/*
+ * Fichier: AutomaticMessageServiceTest
+ * Cette classe teste la logique du service en mode unitaire.
+ * Les dependances sont simulees pour isoler le comportement metier.
+ * Les scenarios couvrent les cas nominaux et les cas d'erreur.
+ * Les assertions verifient les resultats et les interactions attendues.
+ */
+
 import java.util.List;
 import java.util.Optional;
 
@@ -40,6 +48,7 @@ class AutomaticMessageServiceTest {
             messageToApplicationRepository
     );
 
+    // Ce test verifie le comportement de shouldSendAutomaticMessagesForNewOfferWithoutDuplicates.
     @Test
     void shouldSendAutomaticMessagesForNewOfferWithoutDuplicates() {
         JobOffer offer = new JobOffer();
@@ -64,6 +73,7 @@ class AutomaticMessageServiceTest {
         assertTrue(captor.getValue().getMessage().startsWith("Automatic message:"));
     }
 
+    // Ce test verifie le comportement de shouldReturnZeroForNullOffer.
     @Test
     void shouldReturnZeroForNullOffer() {
         int sent = service.sendAutomaticMessagesForNewOffer(null);
@@ -72,6 +82,7 @@ class AutomaticMessageServiceTest {
         verifyNoInteractions(applicationRepository, messageToOfferRepository);
     }
 
+    // Ce test verifie le comportement de shouldReturnZeroForOfferWithoutId.
     @Test
     void shouldReturnZeroForOfferWithoutId() {
         JobOffer offer = new JobOffer();
@@ -82,6 +93,7 @@ class AutomaticMessageServiceTest {
         verifyNoInteractions(applicationRepository, messageToOfferRepository);
     }
 
+    // Ce test verifie le comportement de shouldSkipApplicationsWithoutIdWhenSendingOfferMessages.
     @Test
     void shouldSkipApplicationsWithoutIdWhenSendingOfferMessages() {
         JobOffer offer = new JobOffer();
@@ -102,6 +114,7 @@ class AutomaticMessageServiceTest {
         verify(messageToOfferRepository, never()).findByJobOfferIdAndApplicationId(9, null);
     }
 
+    // Ce test verifie le comportement de shouldReturnZeroWhenAllOfferMessagesAlreadyExist.
     @Test
     void shouldReturnZeroWhenAllOfferMessagesAlreadyExist() {
         JobOffer offer = new JobOffer();
@@ -122,6 +135,7 @@ class AutomaticMessageServiceTest {
         verify(messageToOfferRepository, never()).save(any(MessageToOffer.class));
     }
 
+    // Ce test verifie le comportement de shouldReturnZeroWhenNoApplicationMatchesForOffer.
     @Test
     void shouldReturnZeroWhenNoApplicationMatchesForOffer() {
         JobOffer offer = new JobOffer();
@@ -135,6 +149,7 @@ class AutomaticMessageServiceTest {
         verify(messageToOfferRepository, never()).save(any(MessageToOffer.class));
     }
 
+    // Ce test verifie le comportement de shouldSendAutomaticMessagesForNewApplicationWithoutDuplicates.
     @Test
     void shouldSendAutomaticMessagesForNewApplicationWithoutDuplicates() {
         Application application = new Application();
@@ -160,6 +175,7 @@ class AutomaticMessageServiceTest {
         assertTrue(captor.getValue().getMessage().startsWith("Automatic message:"));
     }
 
+    // Ce test verifie le comportement de shouldReturnZeroForNullApplication.
     @Test
     void shouldReturnZeroForNullApplication() {
         int sent = service.sendAutomaticMessagesForNewApplication(null);
@@ -168,6 +184,7 @@ class AutomaticMessageServiceTest {
         verifyNoInteractions(jobOfferRepository, messageToApplicationRepository);
     }
 
+    // Ce test verifie le comportement de shouldReturnZeroForApplicationWithoutId.
     @Test
     void shouldReturnZeroForApplicationWithoutId() {
         Application application = new Application();
@@ -178,6 +195,7 @@ class AutomaticMessageServiceTest {
         verifyNoInteractions(jobOfferRepository, messageToApplicationRepository);
     }
 
+    // Ce test verifie le comportement de shouldSkipOffersWithoutIdWhenSendingApplicationMessages.
     @Test
     void shouldSkipOffersWithoutIdWhenSendingApplicationMessages() {
         Application application = new Application();
@@ -198,6 +216,7 @@ class AutomaticMessageServiceTest {
         verify(messageToApplicationRepository, never()).findByApplicationIdAndJobOfferId(14, null);
     }
 
+    // Ce test verifie le comportement de shouldReturnZeroWhenAllApplicationMessagesAlreadyExist.
     @Test
     void shouldReturnZeroWhenAllApplicationMessagesAlreadyExist() {
         Application application = new Application();
@@ -218,6 +237,7 @@ class AutomaticMessageServiceTest {
         verify(messageToApplicationRepository, never()).save(any(MessageToApplication.class));
     }
 
+    // Ce test verifie le comportement de shouldReturnZeroWhenNoOfferMatchesForApplication.
     @Test
     void shouldReturnZeroWhenNoOfferMatchesForApplication() {
         Application application = new Application();
