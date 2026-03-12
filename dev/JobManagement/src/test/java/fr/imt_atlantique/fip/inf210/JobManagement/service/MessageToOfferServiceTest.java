@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import static org.mockito.Mockito.mock;
@@ -32,6 +33,16 @@ class MessageToOfferServiceTest {
     }
 
     @Test
+    void shouldReturnEmptyForUnknownOfferAndApplicationPair() {
+        when(repository.findByJobOfferIdAndApplicationId(1, 99)).thenReturn(Optional.empty());
+
+        Optional<MessageToOffer> found = service.findByJobOfferAndApplication(1, 99);
+
+        assertFalse(found.isPresent());
+        verify(repository).findByJobOfferIdAndApplicationId(1, 99);
+    }
+
+    @Test
     void shouldListByCompany() {
         when(repository.findByJobOfferCompanyIdOrderByPublicationdateDesc(3))
                 .thenReturn(List.of(new MessageToOffer(), new MessageToOffer()));
@@ -40,5 +51,37 @@ class MessageToOfferServiceTest {
 
         assertEquals(2, messages.size());
         verify(repository).findByJobOfferCompanyIdOrderByPublicationdateDesc(3);
+    }
+
+    @Test
+    void shouldReturnEmptyListWhenCompanyHasNoOfferMessages() {
+        when(repository.findByJobOfferCompanyIdOrderByPublicationdateDesc(99)).thenReturn(List.of());
+
+        List<MessageToOffer> messages = service.findByCompanyId(99);
+
+        assertEquals(0, messages.size());
+        verify(repository).findByJobOfferCompanyIdOrderByPublicationdateDesc(99);
+    }
+
+    @Test
+    void shouldListByCandidate() {
+        when(repository.findByApplicationCandidateIdOrderByPublicationdateDesc(4))
+                .thenReturn(List.of(new MessageToOffer()));
+
+        List<MessageToOffer> messages = service.findByCandidateId(4);
+
+        assertEquals(1, messages.size());
+        verify(repository).findByApplicationCandidateIdOrderByPublicationdateDesc(4);
+    }
+
+    @Test
+    void shouldSaveMessageToOffer() {
+        MessageToOffer message = new MessageToOffer();
+        when(repository.save(message)).thenReturn(message);
+
+        MessageToOffer saved = service.save(message);
+
+        assertEquals(message, saved);
+        verify(repository).save(message);
     }
 }

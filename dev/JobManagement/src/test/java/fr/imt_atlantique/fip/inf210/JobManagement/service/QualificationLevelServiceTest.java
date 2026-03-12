@@ -5,6 +5,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -32,5 +33,17 @@ class QualificationLevelServiceTest {
         List<QualificationLevel> levels = service.getAllQualificationLevels();
 
         assertEquals(2, levels.size());
+        verify(repository).findAll();
+    }
+
+    @Test
+    void shouldReturnNoQualificationLevelsWhenRepositoryIsEmpty() {
+        setUp();
+        when(repository.findAll()).thenReturn(List.of());
+
+        List<QualificationLevel> levels = service.getAllQualificationLevels();
+
+        assertEquals(0, levels.size());
+        verify(repository).findAll();
     }
 }

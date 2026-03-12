@@ -6,6 +6,8 @@ import java.util.Optional;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -36,6 +38,77 @@ class JobOfferServiceTest {
     }
 
     @Test
+    void shouldNotDeleteWhenOfferIsNotOwnedByCompany() {
+        when(repository.findByIdAndCompanyId(10, 4)).thenReturn(Optional.empty());
+
+        service.deleteByIdAndCompanyId(10, 4);
+
+        verify(repository, never()).delete(org.mockito.ArgumentMatchers.any(JobOffer.class));
+    }
+
+    @Test
+    void shouldFindAllOffers() {
+        when(repository.findAll()).thenReturn(List.of(new JobOffer(), new JobOffer()));
+
+        List<JobOffer> offers = service.findAll();
+
+        assertEquals(2, offers.size());
+        verify(repository).findAll();
+    }
+
+    @Test
+    void shouldFindOfferById() {
+        JobOffer offer = new JobOffer();
+        when(repository.findById(42)).thenReturn(Optional.of(offer));
+
+        Optional<JobOffer> found = service.findById(42);
+
+        assertTrue(found.isPresent());
+        verify(repository).findById(42);
+    }
+
+    @Test
+    void shouldReturnEmptyWhenOfferIdDoesNotExist() {
+        when(repository.findById(99)).thenReturn(Optional.empty());
+
+        Optional<JobOffer> found = service.findById(99);
+
+        assertFalse(found.isPresent());
+        verify(repository).findById(99);
+    }
+
+    @Test
+    void shouldFindOffersByCompanyId() {
+        when(repository.findByCompanyIdOrderByPublicationdateDesc(5)).thenReturn(List.of(new JobOffer()));
+
+        List<JobOffer> offers = service.findByCompanyId(5);
+
+        assertEquals(1, offers.size());
+        verify(repository).findByCompanyIdOrderByPublicationdateDesc(5);
+    }
+
+    @Test
+    void shouldFindOfferByIdAndCompanyId() {
+        JobOffer offer = new JobOffer();
+        when(repository.findByIdAndCompanyId(11, 5)).thenReturn(Optional.of(offer));
+
+        Optional<JobOffer> found = service.findByIdAndCompanyId(11, 5);
+
+        assertTrue(found.isPresent());
+        verify(repository).findByIdAndCompanyId(11, 5);
+    }
+
+    @Test
+    void shouldReturnEmptyWhenOfferDoesNotBelongToCompany() {
+        when(repository.findByIdAndCompanyId(11, 99)).thenReturn(Optional.empty());
+
+        Optional<JobOffer> found = service.findByIdAndCompanyId(11, 99);
+
+        assertFalse(found.isPresent());
+        verify(repository).findByIdAndCompanyId(11, 99);
+    }
+
+    @Test
     void shouldSearchWithoutSectorFilterWhenNoSectorsProvided() {
         when(repository.searchByCriteria(false, Collections.emptySet(), (short) 3)).thenReturn(List.of(new JobOffer()));
 
@@ -43,6 +116,27 @@ class JobOfferServiceTest {
 
         assertEquals(1, offers.size());
         verify(repository).searchByCriteria(false, Collections.emptySet(), (short) 3);
+    }
+
+    @Test
+    void shouldSearchWithoutSectorFilterWhenSectorSetIsEmpty() {
+        when(repository.searchByCriteria(false, Collections.emptySet(), (short) 4)).thenReturn(List.of(new JobOffer()));
+
+        List<JobOffer> offers = service.searchByCriteria(Collections.emptySet(), (short) 4);
+
+        assertEquals(1, offers.size());
+        verify(repository).searchByCriteria(false, Collections.emptySet(), (short) 4);
+    }
+
+    @Test
+    void shouldSearchByCriteriaWithNullMinimumRank() {
+        Set<Integer> sectorIds = Set.of(3);
+        when(repository.searchByCriteria(true, sectorIds, null)).thenReturn(List.of(new JobOffer(), new JobOffer()));
+
+        List<JobOffer> offers = service.searchByCriteria(sectorIds, null);
+
+        assertEquals(2, offers.size());
+        verify(repository).searchByCriteria(eq(true), eq(sectorIds), eq(null));
     }
 
     @Test
@@ -78,5 +172,15 @@ class JobOfferServiceTest {
         service.save(existingOffer);
 
         verify(automaticMessageService, never()).sendAutomaticMessagesForNewOffer(existingOffer);
+    }
+
+    @Test
+    void shouldFindMatchingByApplicationId() {
+        when(repository.findMatchingByApplicationId(12)).thenReturn(List.of(new JobOffer()));
+
+        List<JobOffer> matches = service.findMatchingByApplicationId(12);
+
+        assertEquals(1, matches.size());
+        verify(repository).findMatchingByApplicationId(12);
     }
 }

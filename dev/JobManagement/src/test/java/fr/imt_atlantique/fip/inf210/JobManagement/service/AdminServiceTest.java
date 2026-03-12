@@ -3,6 +3,7 @@ package fr.imt_atlantique.fip.inf210.JobManagement.service;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import static org.mockito.Mockito.mock;
@@ -30,6 +31,16 @@ class AdminServiceTest {
 
         assertTrue(found.isPresent());
         verify(repository).findByAppUserMail("admin.service@imt-atlantique.fr");
+    }
+
+    @Test
+    void shouldReturnEmptyWhenAdminMailUnknown() {
+        when(repository.findByAppUserMail("unknown.admin@imt-atlantique.fr")).thenReturn(Optional.empty());
+
+        Optional<Admin> found = service.findByMail("unknown.admin@imt-atlantique.fr");
+
+        assertFalse(found.isPresent());
+        verify(repository).findByAppUserMail("unknown.admin@imt-atlantique.fr");
     }
 
     @Test

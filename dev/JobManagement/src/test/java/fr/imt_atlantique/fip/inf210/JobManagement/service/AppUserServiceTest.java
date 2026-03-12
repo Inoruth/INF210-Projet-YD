@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
@@ -16,6 +17,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import fr.imt_atlantique.fip.inf210.jobmanagement.entity.AppUser;
+import fr.imt_atlantique.fip.inf210.jobmanagement.entity.Candidate;
 import fr.imt_atlantique.fip.inf210.jobmanagement.entity.Company;
 import fr.imt_atlantique.fip.inf210.jobmanagement.repository.AppUserJpaRepository;
 import fr.imt_atlantique.fip.inf210.jobmanagement.repository.CandidateJpaRepository;
@@ -39,6 +41,26 @@ class AppUserServiceTest {
 
         assertTrue(found.isPresent());
         assertEquals("svc.test@imt-atlantique.fr", found.get().getMail());
+    }
+
+    @Test
+    void shouldReturnEmptyWhenMailIsUnknown() {
+        when(repository.findByMail("unknown.service@imt-atlantique.fr")).thenReturn(Optional.empty());
+
+        Optional<AppUser> found = service.findByMail("unknown.service@imt-atlantique.fr");
+
+        assertFalse(found.isPresent());
+    }
+
+    @Test
+    void shouldSaveUser() {
+        AppUser user = new AppUser("save.service@imt-atlantique.fr", "pwd", AppUser.UserType.company);
+        when(repository.save(user)).thenReturn(user);
+
+        AppUser saved = service.save(user);
+
+        assertEquals(user, saved);
+        verify(repository).save(user);
     }
 
     @Test
@@ -71,6 +93,35 @@ class AppUserServiceTest {
     }
 
     @Test
+    void shouldDeleteApplicantProfileBeforeUser() {
+        AppUser user = new AppUser("candidate.delete@imt-atlantique.fr", "pwd", AppUser.UserType.applicant);
+        Candidate candidate = new Candidate();
+        candidate.setAppUser(user);
+
+        when(repository.findByMail("candidate.delete@imt-atlantique.fr")).thenReturn(Optional.of(user));
+        when(candidateRepository.findByAppUserMail("candidate.delete@imt-atlantique.fr")).thenReturn(Optional.of(candidate));
+
+        service.deleteByMail("candidate.delete@imt-atlantique.fr");
+
+        InOrder inOrder = inOrder(candidateRepository, repository);
+        inOrder.verify(candidateRepository).findByAppUserMail("candidate.delete@imt-atlantique.fr");
+        inOrder.verify(candidateRepository).delete(candidate);
+        inOrder.verify(repository).delete(user);
+    }
+
+    @Test
+    void shouldDeleteCompanyUserWhenNoCompanyProfileExists() {
+        AppUser user = new AppUser("company.noprofile@imt-atlantique.fr", "pwd", AppUser.UserType.company);
+        when(repository.findByMail("company.noprofile@imt-atlantique.fr")).thenReturn(Optional.of(user));
+        when(companyRepository.findByAppUserMail("company.noprofile@imt-atlantique.fr")).thenReturn(Optional.empty());
+
+        service.deleteByMail("company.noprofile@imt-atlantique.fr");
+
+        verify(companyRepository).findByAppUserMail("company.noprofile@imt-atlantique.fr");
+        verify(repository).delete(user);
+    }
+
+    @Test
     void shouldNotDeleteAdminUser() {
         AppUser admin = new AppUser("admin.test@imt-atlantique.fr", "pwd", AppUser.UserType.admin);
         when(repository.findByMail("admin.test@imt-atlantique.fr")).thenReturn(Optional.of(admin));
@@ -78,6 +129,16 @@ class AppUserServiceTest {
         service.deleteByMail("admin.test@imt-atlantique.fr");
 
         verify(repository, never()).delete(admin);
+        verifyNoInteractions(companyRepository, candidateRepository);
+    }
+
+    @Test
+    void shouldDoNothingWhenDeletingUnknownUser() {
+        when(repository.findByMail("unknown@imt-atlantique.fr")).thenReturn(Optional.empty());
+
+        service.deleteByMail("unknown@imt-atlantique.fr");
+
+        verify(repository, never()).delete(org.mockito.ArgumentMatchers.any(AppUser.class));
         verifyNoInteractions(companyRepository, candidateRepository);
     }
 

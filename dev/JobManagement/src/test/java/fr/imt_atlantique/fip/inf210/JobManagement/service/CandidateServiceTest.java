@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import static org.mockito.Mockito.mock;
@@ -34,6 +35,16 @@ class CandidateServiceTest {
     }
 
     @Test
+    void shouldReturnEmptyWhenCandidateMailUnknown() {
+        when(repository.findByAppUserMail("unknown.candidate@imt-atlantique.fr")).thenReturn(Optional.empty());
+
+        Optional<Candidate> found = service.findByMail("unknown.candidate@imt-atlantique.fr");
+
+        assertFalse(found.isPresent());
+        verify(repository).findByAppUserMail("unknown.candidate@imt-atlantique.fr");
+    }
+
+    @Test
     void shouldSearchByLastname() {
         when(repository.findByLastnameContainingIgnoreCaseOrderByLastnameAsc("du"))
                 .thenReturn(List.of(new Candidate(), new Candidate()));
@@ -42,5 +53,38 @@ class CandidateServiceTest {
 
         assertEquals(2, candidates.size());
         verify(repository).findByLastnameContainingIgnoreCaseOrderByLastnameAsc("du");
+    }
+
+    @Test
+    void shouldReturnNoCandidateWhenLastnameSearchHasNoMatch() {
+        when(repository.findByLastnameContainingIgnoreCaseOrderByLastnameAsc("zzz"))
+                .thenReturn(List.of());
+
+        List<Candidate> candidates = service.searchByLastname("zzz");
+
+        assertEquals(0, candidates.size());
+        verify(repository).findByLastnameContainingIgnoreCaseOrderByLastnameAsc("zzz");
+    }
+
+    @Test
+    void shouldFindAllCandidates() {
+        when(repository.findAll()).thenReturn(List.of(new Candidate(), new Candidate()));
+
+        List<Candidate> candidates = service.findAll();
+
+        assertEquals(2, candidates.size());
+        verify(repository).findAll();
+    }
+
+    @Test
+    void shouldSaveCandidate() {
+        Candidate candidate = new Candidate();
+        candidate.setLastname("Saved");
+        when(repository.save(candidate)).thenReturn(candidate);
+
+        Candidate saved = service.save(candidate);
+
+        assertEquals(candidate, saved);
+        verify(repository).save(candidate);
     }
 }

@@ -5,6 +5,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.Test;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -29,5 +30,17 @@ class SectorServiceTest {
         List<Sector> sectors = service.getAllSectors();
 
         assertEquals(2, sectors.size());
+        verify(repository).findAll();
+    }
+
+    @Test
+    void shouldReturnNoSectorsWhenRepositoryIsEmpty() {
+        setUp();
+        when(repository.findAll()).thenReturn(List.of());
+
+        List<Sector> sectors = service.getAllSectors();
+
+        assertEquals(0, sectors.size());
+        verify(repository).findAll();
     }
 }
