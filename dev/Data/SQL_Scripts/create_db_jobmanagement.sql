@@ -1,52 +1,174 @@
--- Title :             SQL script to create the DB of the jobmngt project
--- Version :           0.2
--- Creation date :     24/08/2023
--- Last modification date : 18/02/2026
--- Author :            Grégory SMITS
--- Description :       Script used to create the DB of the job management app.
---                     Tested on PostgreSQL 10
+-- Title :            SQL script to create the DB of the jobmngt project
+-- Version :          1.0
+-- Creation date :    09/03/2026
+-- Last modification date : 09/03/2026
+-- Authors :           Yohan AZIKA EROS & Djelloul DJELLAL
+-- Description :      Script used to create the DB of the job management app.
+--                    Tested on PostgreSQL 15
 
 -- +----------------------------------------------------------------------------------------------+
 -- | Suppress tables if they exist                                                                |
 -- +----------------------------------------------------------------------------------------------+
 
-drop table if exists appuser;
-drop table if exists sector;
-drop table if exists qualificationlevel;
+drop table if exists message_to_application cascade;
+drop table if exists message_to_offer cascade;
+drop table if exists application_sector cascade;
+drop table if exists joboffer_sector cascade;
+drop table if exists applications cascade;
+drop table if exists joboffers cascade;
+drop table if exists candidates cascade;
+drop table if exists companies cascade;
+drop table if exists admins cascade;
+drop table if exists appusers cascade;
+drop table if exists qualificationlevels cascade;
+drop table if exists sectors cascade;
 
 -- +----------------------------------------------------------------------------------------------+
 -- | Tables creation                                                                              |
 -- +----------------------------------------------------------------------------------------------+
 
-create table sector
-(
-  id       serial primary key,
-  label varchar(50) not null unique
+create table sectors (
+                         id       serial primary key,
+                         label    varchar(50) not null unique
 );
 
-create table qualificationlevel
-(
-  id       serial primary key,
-  label varchar(50) not null unique
+create table qualificationlevels (
+                                     id       serial primary key,
+                                     label    varchar(50) not null unique,
+                                     rank     smallint unique  -- compare qualification levels (e.g., minimum required)
 );
 
-create table appuser
-(
-  mail             varchar(100) primary key,
-  password         varchar(100) not null,
-  usertype            varchar(20) not null
+create table appusers (
+                          id       serial primary key,
+                          mail     varchar(100) not null unique,
+                          password varchar(255) not null,
+                          usertype varchar(20)  not null,
+
+                          constraint ck_password_length check (length(password) >= 4),
+                          constraint ck_usertype check (usertype in ('admin','company','applicant')),
+                          constraint ck_mail_format check (mail ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$')
+    );
+
+create table admins (
+                        id integer primary key,
+                        constraint fk_admin_user foreign key (id)
+                            references appusers(id) on delete cascade
 );
-alter table appuser add constraint appuser_type_check check (usertype in ('applicant', 'company', 'admin'));
-alter table appuser add constraint appuser_mail_check check (mail ~* '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$');
-alter table appuser add constraint appuser_password_check check (length(password) >= 3);
+
+create table companies (
+                           id           integer primary key,
+                           denomination varchar(100) not null,
+                           description  text,
+                           city         varchar(100),
+
+                           constraint fk_company_user foreign key (id)
+                               references appusers(id) on delete cascade
+);
+
+create table candidates (
+                            id        integer primary key,
+                            lastname  varchar(50) not null,
+                            firstname varchar(50),
+                            city      varchar(100),
+
+                            constraint fk_candidate_user foreign key (id)
+                                references appusers(id) on delete cascade
+);
+
+create table joboffers (
+                           id                    serial primary key,
+                           title                 varchar(120) not null,
+                           taskdescription       text not null,
+                           publicationdate       date not null default current_date,
+                           company_id            integer not null,
+                           qualificationlevel_id integer not null,
+
+                           constraint fk_joboffer_company foreign key (company_id)
+                               references companies(id) on delete cascade,
+                           constraint fk_joboffer_qual foreign key (qualificationlevel_id)
+                               references qualificationlevels(id)
+);
+
+create table applications (
+                              id                    serial primary key,
+                              cv                    text not null,
+                              appdate               date not null default current_date,
+                              candidate_id          integer not null,
+                              qualificationlevel_id integer not null,
+
+                              constraint fk_application_candidate foreign key (candidate_id)
+                                  references candidates(id) on delete cascade,
+                              constraint fk_application_qual foreign key (qualificationlevel_id)
+                                  references qualificationlevels(id)
+);
+
+create table joboffer_sector (
+                                 joboffer_id integer not null,
+                                 sector_id   integer not null,
+                                 primary key (joboffer_id, sector_id),
+
+                                 constraint fk_joboffer_sector_offer foreign key (joboffer_id)
+                                     references joboffers(id) on delete cascade,
+                                 constraint fk_joboffer_sector_sector foreign key (sector_id)
+                                     references sectors(id)
+);
+
+create table application_sector (
+                                    application_id integer not null,
+                                    sector_id      integer not null,
+                                    primary key (application_id, sector_id),
+
+                                    constraint fk_application_sector_app foreign key (application_id)
+                                        references applications(id) on delete cascade,
+                                    constraint fk_application_sector_sector foreign key (sector_id)
+                                        references sectors(id)
+);
+
+create table message_to_offer (
+                                  id              serial primary key,
+                                  publicationdate date not null default current_date,
+                                  message         text not null,
+                                  joboffer_id     integer not null,
+                                  application_id  integer not null,
+
+                                  constraint fk_mto_offer foreign key (joboffer_id)
+                                      references joboffers(id) on delete cascade,
+                                  constraint fk_mto_application foreign key (application_id)
+                                      references applications(id) on delete cascade,
+
+                                  constraint uq_mto_pair unique (joboffer_id, application_id)
+);
+
+create table message_to_application (
+                                        id              serial primary key,
+                                        publicationdate date not null default current_date,
+                                        message         text not null,
+                                        application_id  integer not null,
+                                        joboffer_id     integer not null,
+
+                                        constraint fk_mta_application foreign key (application_id)
+                                            references applications(id) on delete cascade,
+                                        constraint fk_mta_offer foreign key (joboffer_id)
+                                            references joboffers(id) on delete cascade,
+
+                                        constraint uq_mta_pair unique (application_id, joboffer_id)
+);
 
 -- +----------------------------------------------------------------------------------------------+
--- | Insert companies                                                                             |
+-- | Insert initial users                                                                         |
 -- +----------------------------------------------------------------------------------------------+
 
-insert into appuser(mail, password, usertype) values ('admin@imt-atlantique.fr', 'password123', 'admin');
-insert into appuser(mail, password, usertype) values ('toto@mytoto.fr', 'password456', 'applicant');
-insert into appuser(mail, password, usertype) values ('contact@sportinnovation.fr', 'password789', 'company');
+-- Admin
+insert into appusers(mail, password, usertype) values ('admin@imt-atlantique.fr', 'password123', 'admin');
+insert into admins(id) values (lastval());
+
+-- Applicant
+insert into appusers(mail, password, usertype) values ('toto@mytoto.fr', 'password456', 'applicant');
+insert into candidates(id, lastname, firstname, city) values (lastval(), 'Toto', 'MyToto', 'Brest');
+
+-- Company
+insert into appusers(mail, password, usertype) values ('contact@sportinnovation.fr', 'password789', 'company');
+insert into companies(id, denomination, description, city) values (lastval(), 'Sport Innovation', 'Equipement sportif', 'Paris');
 
 
 -- +----------------------------------------------------------------------------------------------+
@@ -55,36 +177,36 @@ insert into appuser(mail, password, usertype) values ('contact@sportinnovation.f
 
 -- Some sectors
 
-insert into sector(id, label) values (nextval('sector_id_seq'), 'Purchase/Logistic');                  --  1
-insert into sector(id, label) values (nextval('sector_id_seq'), 'Administration');             --  2
-insert into sector(id, label) values (nextval('sector_id_seq'), 'Agriculture');                        --  3
-insert into sector(id, label) values (nextval('sector_id_seq'), 'Agrofood');                    --  4
-insert into sector(id, label) values (nextval('sector_id_seq'), 'Insurance');                          --  5
-insert into sector(id, label) values (nextval('sector_id_seq'), 'Audit/Advise/Expertise');           --  6
-insert into sector(id, label) values (nextval('sector_id_seq'), 'Public works/Real estate');                     --  7
-insert into sector(id, label) values (nextval('sector_id_seq'), 'Trade');                         --  8
-insert into sector(id, label) values (nextval('sector_id_seq'), 'Communication/Art/Media/Fashion');       --  9
-insert into sector(id, label) values (nextval('sector_id_seq'), 'Accounting');                       -- 10
-insert into sector(id, label) values (nextval('sector_id_seq'), 'Direction/Execution');       -- 11
-insert into sector(id, label) values (nextval('sector_id_seq'), 'Distribution/Sale');              -- 12
-insert into sector(id, label) values (nextval('sector_id_seq'), 'Electronic/Microelectronic');     -- 13
-insert into sector(id, label) values (nextval('sector_id_seq'), 'Environment');                      -- 14
-insert into sector(id, label) values (nextval('sector_id_seq'), 'Finance/Bank');                     -- 15
-insert into sector(id, label) values (nextval('sector_id_seq'), 'Training/Teaching');             -- 16
-insert into sector(id, label) values (nextval('sector_id_seq'), 'Hotel/Restaurant/Tourism');   -- 17
-insert into sector(id, label) values (nextval('sector_id_seq'), 'Industry/Engineering/Production');    -- 18
-insert into sector(id, label) values (nextval('sector_id_seq'), 'Computer science');                       -- 19
-insert into sector(id, label) values (nextval('sector_id_seq'), 'Juridique/Fiscal/Droit');             -- 20
-insert into sector(id, label) values (nextval('sector_id_seq'), 'Marketing');                          -- 21
-insert into sector(id, label) values (nextval('sector_id_seq'), 'Public/Parapublic');                  -- 22
-insert into sector(id, label) values (nextval('sector_id_seq'), 'Human resources');                -- 23
-insert into sector(id, label) values (nextval('sector_id_seq'), 'Health/Social/Biology/HHumanitarian');  -- 24
-insert into sector(id, label) values (nextval('sector_id_seq'), 'Telecom/Networking');                    -- 25
+insert into sectors(label) values ('Purchase/Logistic');
+insert into sectors(label) values ('Administration');
+insert into sectors(label) values ('Agriculture');
+insert into sectors(label) values ('Agrofood');
+insert into sectors(label) values ('Insurance');
+insert into sectors(label) values ('Audit/Advise/Expertise');
+insert into sectors(label) values ('Public works/Real estate');
+insert into sectors(label) values ('Trade');
+insert into sectors(label) values ('Communication/Art/Media/Fashion');
+insert into sectors(label) values ('Accounting');
+insert into sectors(label) values ('Direction/Execution');
+insert into sectors(label) values ('Distribution/Sale');
+insert into sectors(label) values ('Electronic/Microelectronic');
+insert into sectors(label) values ('Environment');
+insert into sectors(label) values ('Finance/Bank');
+insert into sectors(label) values ('Training/Teaching');
+insert into sectors(label) values ('Hotel/Restaurant/Tourism');
+insert into sectors(label) values ('Industry/Engineering/Production');
+insert into sectors(label) values ('Computer science');
+insert into sectors(label) values ('Juridique/Fiscal/Droit');
+insert into sectors(label) values ('Marketing');
+insert into sectors(label) values ('Public/Parapublic');
+insert into sectors(label) values ('Human resources');
+insert into sectors(label) values ('Health/Social/Biology/Humanitarian');
+insert into sectors(label) values ('Telecom/Networking');
 
 -- Some qualification levels
 
-insert into qualificationlevel(id, label) values (nextval('qualificationlevel_id_seq'), 'Professional level');   --  1
-insert into qualificationlevel(id, label) values (nextval('qualificationlevel_id_seq'), 'A-diploma');       --  2
-insert into qualificationlevel(id, label) values (nextval('qualificationlevel_id_seq'), 'Licence');     --  3
-insert into qualificationlevel(id, label) values (nextval('qualificationlevel_id_seq'), 'Master');     --  4
-insert into qualificationlevel(id, label) values (nextval('qualificationlevel_id_seq'), 'PhD');  --  5
+insert into qualificationlevels(label, rank) values ('Professional level', 1);
+insert into qualificationlevels(label, rank) values ('A-diploma', 2);
+insert into qualificationlevels(label, rank) values ('Licence', 3);
+insert into qualificationlevels(label, rank) values ('Master', 4);
+insert into qualificationlevels(label, rank) values ('PhD', 5);

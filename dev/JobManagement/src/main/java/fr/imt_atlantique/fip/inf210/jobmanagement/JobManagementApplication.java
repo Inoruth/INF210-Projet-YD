@@ -1,5 +1,4 @@
 package fr.imt_atlantique.fip.inf210.jobmanagement;
-
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
