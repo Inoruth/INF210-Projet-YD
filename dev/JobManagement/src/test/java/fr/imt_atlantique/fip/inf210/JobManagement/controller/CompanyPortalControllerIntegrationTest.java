@@ -329,6 +329,228 @@ class CompanyPortalControllerIntegrationTest {
                 .andExpect(status().isOk());
     }
 
+    @Test
+    void shouldRejectInvalidOfferCreationPayloads() throws Exception {
+        String token = token();
+        Company company = seedCompany("invalid.offer." + token + "@imt-atlantique.fr", "Invalid Offer Corp " + token);
+        QualificationLevel level = qualificationLevelRepository.save(new QualificationLevel("Offer Validation Level " + token, (short) 9));
+        Sector sector = sectorRepository.save(new Sector("Offer Validation Sector " + token));
+
+        MockHttpSession companySession = buildSession(company.getAppUser().getMail(), AppUser.UserType.company);
+
+        mockMvc.perform(post("/publishjoboffer")
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .session(companySession)
+                        .param("title", "   ")
+                        .param("taskdescription", "Valid task")
+                        .param("qualificationLevelId", level.getId().toString())
+                        .param("sectorIds", sector.getId().toString()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/publishjoboffer?error=title-required"));
+
+        mockMvc.perform(post("/publishjoboffer")
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .session(companySession)
+                        .param("title", "x".repeat(121))
+                        .param("taskdescription", "Valid task")
+                        .param("qualificationLevelId", level.getId().toString())
+                        .param("sectorIds", sector.getId().toString()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/publishjoboffer?error=title-too-long"));
+
+        mockMvc.perform(post("/publishjoboffer")
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .session(companySession)
+                        .param("title", "Valid title")
+                        .param("taskdescription", "Valid task")
+                        .param("qualificationLevelId", "999999"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/publishjoboffer?error=qualification-required"));
+
+        mockMvc.perform(post("/publishjoboffer")
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .session(companySession)
+                        .param("title", "Valid title")
+                        .param("taskdescription", "Valid task")
+                        .param("qualificationLevelId", level.getId().toString()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/publishjoboffer?error=sectors-required"));
+
+        mockMvc.perform(post("/publishjoboffer")
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .session(companySession)
+                        .param("title", "Valid title")
+                        .param("taskdescription", "Valid task")
+                        .param("qualificationLevelId", level.getId().toString())
+                        .param("sectorIds", "999999"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/publishjoboffer?error=invalid-sector"));
+    }
+
+    @Test
+    void shouldRejectInvalidCompanyProfileUpdatePayloads() throws Exception {
+        String token = token();
+        Company company = seedCompany("invalid.profile." + token + "@imt-atlantique.fr", "Profile Invalid Corp " + token);
+        MockHttpSession companySession = buildSession(company.getAppUser().getMail(), AppUser.UserType.company);
+
+        mockMvc.perform(post("/modifycompanyprofile")
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .session(companySession)
+                        .param("mail", company.getAppUser().getMail())
+                        .param("denomination", "   ")
+                        .param("description", "Some description")
+                        .param("city", "Nantes"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/modifycompanyprofile/" + company.getAppUser().getMail() + "?error=denomination-required"));
+
+        mockMvc.perform(post("/modifycompanyprofile")
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .session(companySession)
+                        .param("mail", company.getAppUser().getMail())
+                        .param("denomination", "x".repeat(101))
+                        .param("description", "Some description")
+                        .param("city", "Nantes"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/modifycompanyprofile/" + company.getAppUser().getMail() + "?error=denomination-too-long"));
+
+        mockMvc.perform(post("/modifycompanyprofile")
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .session(companySession)
+                        .param("mail", company.getAppUser().getMail())
+                        .param("denomination", "Valid denomination")
+                        .param("description", "Some description")
+                        .param("city", "x".repeat(101)))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/modifycompanyprofile/" + company.getAppUser().getMail() + "?error=city-too-long"));
+    }
+
+    @Test
+    void shouldRejectInvalidManualMessagePayloadsForCompany() throws Exception {
+        String token = token();
+
+        Company company = seedCompany("messages.invalid." + token + "@imt-atlantique.fr", "Messages Invalid Corp " + token);
+        Candidate matchingCandidate = seedCandidate("candidate.matching." + token + "@imt-atlantique.fr", "CandidateMatching" + token);
+        Candidate nonMatchingCandidate = seedCandidate("candidate.nonmatching." + token + "@imt-atlantique.fr", "CandidateNonMatching" + token);
+
+        QualificationLevel sharedLevel = qualificationLevelRepository.findAll().stream()
+                .findFirst()
+                .orElseGet(() -> qualificationLevelRepository.save(new QualificationLevel("Fallback Message Validation Level " + token, (short) 31)));
+        Sector sharedSector = sectorRepository.save(new Sector("Shared Message Validation Sector " + token));
+        Sector nonMatchingSector = sectorRepository.save(new Sector("Non Matching Message Validation Sector " + token));
+
+        JobOffer offer = new JobOffer("Messaging validation offer " + token, "Offer description", company, sharedLevel);
+        offer.getSectors().add(sharedSector);
+        JobOffer savedOffer = jobOfferRepository.save(offer);
+
+        Application matchingApplication = new Application("matching-cv-" + token + ".pdf", matchingCandidate, sharedLevel);
+        matchingApplication.getSectors().add(sharedSector);
+        Application savedMatchingApplication = applicationRepository.save(matchingApplication);
+
+        Application nonMatchingApplication = new Application("non-matching-cv-" + token + ".pdf", nonMatchingCandidate, sharedLevel);
+        nonMatchingApplication.getSectors().add(nonMatchingSector);
+        Application savedNonMatchingApplication = applicationRepository.save(nonMatchingApplication);
+
+        MockHttpSession companySession = buildSession(company.getAppUser().getMail(), AppUser.UserType.company);
+
+        mockMvc.perform(post("/managemyoffers/{mail}/offer/{offerId}/application/{applicationId}/message",
+                        company.getAppUser().getMail(), savedOffer.getId(), savedMatchingApplication.getId())
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .session(companySession)
+                        .param("message", "   "))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/managemyoffers/" + company.getAppUser().getMail() + "/offer/" + savedOffer.getId() + "/matches?error=message-required"));
+
+        mockMvc.perform(post("/managemyoffers/{mail}/offer/{offerId}/application/{applicationId}/message",
+                        company.getAppUser().getMail(), savedOffer.getId(), savedMatchingApplication.getId())
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .session(companySession)
+                        .param("message", "x".repeat(4001)))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/managemyoffers/" + company.getAppUser().getMail() + "/offer/" + savedOffer.getId() + "/matches?error=message-too-long"));
+
+        mockMvc.perform(post("/managemyoffers/{mail}/offer/{offerId}/application/{applicationId}/message",
+                        company.getAppUser().getMail(), savedOffer.getId(), savedNonMatchingApplication.getId())
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .session(companySession)
+                        .param("message", "This message should fail"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void shouldRejectInvalidOfferUpdatePayloads() throws Exception {
+        String token = token();
+        Company company = seedCompany("invalid.update." + token + "@imt-atlantique.fr", "Invalid Update Corp " + token);
+        QualificationLevel level = qualificationLevelRepository.save(new QualificationLevel("Offer Update Validation Level " + token, (short) 11));
+        Sector sector = sectorRepository.save(new Sector("Offer Update Validation Sector " + token));
+
+        JobOffer offer = new JobOffer("Initial title " + token, "Initial description", company, level);
+        offer.getSectors().add(sector);
+        JobOffer savedOffer = jobOfferRepository.save(offer);
+
+        MockHttpSession companySession = buildSession(company.getAppUser().getMail(), AppUser.UserType.company);
+
+        String editBase = "/managemyoffers/" + company.getAppUser().getMail() + "/offer/" + savedOffer.getId() + "/edit?error=";
+
+        mockMvc.perform(post("/managemyoffers/{mail}/offer/{offerId}/update", company.getAppUser().getMail(), savedOffer.getId())
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .session(companySession)
+                        .param("title", "   ")
+                        .param("taskdescription", "Valid task")
+                        .param("qualificationLevelId", level.getId().toString())
+                        .param("sectorIds", sector.getId().toString()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl(editBase + "title-required"));
+
+        mockMvc.perform(post("/managemyoffers/{mail}/offer/{offerId}/update", company.getAppUser().getMail(), savedOffer.getId())
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .session(companySession)
+                        .param("title", "x".repeat(121))
+                        .param("taskdescription", "Valid task")
+                        .param("qualificationLevelId", level.getId().toString())
+                        .param("sectorIds", sector.getId().toString()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl(editBase + "title-too-long"));
+
+        mockMvc.perform(post("/managemyoffers/{mail}/offer/{offerId}/update", company.getAppUser().getMail(), savedOffer.getId())
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .session(companySession)
+                        .param("title", "Valid title")
+                        .param("taskdescription", "   ")
+                        .param("qualificationLevelId", level.getId().toString())
+                        .param("sectorIds", sector.getId().toString()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl(editBase + "taskdescription-required"));
+
+        mockMvc.perform(post("/managemyoffers/{mail}/offer/{offerId}/update", company.getAppUser().getMail(), savedOffer.getId())
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .session(companySession)
+                        .param("title", "Valid title")
+                        .param("taskdescription", "Valid task")
+                        .param("qualificationLevelId", "999999")
+                        .param("sectorIds", sector.getId().toString()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl(editBase + "qualification-required"));
+
+        mockMvc.perform(post("/managemyoffers/{mail}/offer/{offerId}/update", company.getAppUser().getMail(), savedOffer.getId())
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .session(companySession)
+                        .param("title", "Valid title")
+                        .param("taskdescription", "Valid task")
+                        .param("qualificationLevelId", level.getId().toString()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl(editBase + "sectors-required"));
+
+        mockMvc.perform(post("/managemyoffers/{mail}/offer/{offerId}/update", company.getAppUser().getMail(), savedOffer.getId())
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .session(companySession)
+                        .param("title", "Valid title")
+                        .param("taskdescription", "Valid task")
+                        .param("qualificationLevelId", level.getId().toString())
+                        .param("sectorIds", "999999"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl(editBase + "invalid-sector"));
+    }
+
     private Company seedCompany(String mail, String denomination) {
         AppUser companyUser = appUserRepository.save(new AppUser(mail, "pwd1234", AppUser.UserType.company));
         return companyRepository.save(new Company(companyUser, denomination, "Initial description", "Nantes"));
