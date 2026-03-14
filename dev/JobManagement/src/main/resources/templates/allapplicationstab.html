@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments :: head('Applications')"></head>
+<body>
+
+<nav th:replace="fragments :: navbar"></nav>
+
+<div class="container">
+    <header th:replace="fragments :: pageHeader('Applications', 'Public list and search of applications')"></header>
+
+    <ul th:replace="fragments :: mainNavigation(null, null, null, null, 'active', null, null)"></ul>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Search filters</h5>
+            <form action="/allapplications" method="GET" class="row g-3">
+                <div class="col-12">
+                    <label class="form-label">Sectors</label>
+                    <div class="d-flex flex-wrap gap-3">
+                        <div class="form-check" th:each="sector : ${sectors}">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   name="sectorIds"
+                                   th:id="${'app-sector-' + sector.id}"
+                                   th:value="${sector.id}"
+                                   th:checked="${selectedSectorIds != null and selectedSectorIds.contains(sector.id)}">
+                            <label class="form-check-label" th:for="${'app-sector-' + sector.id}" th:text="${sector.label}"></label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="minimumRank" class="form-label">Minimum qualification rank</label>
+                    <select id="minimumRank" name="minimumRank" class="form-select">
+                        <option value="">No minimum rank</option>
+                        <option th:each="level : ${qualificationLevels}"
+                                th:value="${level.rank}"
+                                th:text="${level.label + ' (rank ' + level.rank + ')'}"
+                                th:selected="${minimumRank != null and minimumRank == level.rank}">
+                        </option>
+                    </select>
+                </div>
+
+                <div class="col-12 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Apply filters</button>
+                    <a href="/allapplications" class="btn btn-outline-secondary">Reset</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div th:if="${hasFilter}" class="alert alert-info">
+        Active filters applied. <strong th:text="${applications.size()}"></strong> application(s) found.
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title mb-3">All applications</h5>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>ID</th>
+                            <th>Candidate</th>
+                            <th>Sectors</th>
+                            <th>Qualification</th>
+                            <th>Date</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(applications)}">
+                            <td colspan="6" class="text-center text-muted">No application found.</td>
+                        </tr>
+                        <tr th:each="jobApplication : ${applications}">
+                            <td th:text="${jobApplication.id}"></td>
+                            <td>
+                                <a th:href="@{/candidate/{mail}(mail=${jobApplication.candidate.appUser.mail})}"
+                                   th:text="${jobApplication.candidate.firstname + ' ' + jobApplication.candidate.lastname}"></a>
+                            </td>
+                            <td>
+                                <span th:if="${jobApplication.sectors == null or jobApplication.sectors.isEmpty()}" class="text-muted">-</span>
+                                <th:block th:each="sector,iter : ${jobApplication.sectors}">
+                                    <span th:text="${sector.label}"></span><span th:if="${!iter.last}">, </span>
+                                </th:block>
+                            </td>
+                            <td th:text="${jobApplication.qualificationLevel.label + ' (rank ' + jobApplication.qualificationLevel.rank + ')'}"></td>
+                            <td th:text="${jobApplication.appdate}"></td>
+                            <td>
+                                <a class="btn btn-sm btn-outline-primary"
+                                   th:href="@{/application/{id}(id=${jobApplication.id})}">View</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="fragments :: loginModal"></div>
+<th:block th:replace="fragments :: scripts"></th:block>
+</body>
+</html>

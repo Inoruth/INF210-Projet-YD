@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments :: head('Job Offer Details')"></head>
+<body>
+
+<nav th:replace="fragments :: navbar"></nav>
+
+<div class="container">
+    <header th:replace="fragments :: pageHeader('Job Offer Details', 'Detailed information about a published offer')"></header>
+
+    <ul th:replace="fragments :: mainNavigation(null, null, null, 'active', null, null, null)"></ul>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title mb-3" th:text="${job.title}"></h5>
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <strong>Offer ID:</strong>
+                    <span th:text="${job.id}"></span>
+                </div>
+                <div class="col-md-4">
+                    <strong>Publication date:</strong>
+                    <span th:text="${job.publicationdate}"></span>
+                </div>
+                <div class="col-md-4">
+                    <strong>Company:</strong>
+                    <a th:href="@{/company/{mail}(mail=${job.company.appUser.mail})}" th:text="${job.company.denomination}"></a>
+                </div>
+
+                <div class="col-12">
+                    <strong>Task description:</strong>
+                    <p class="mb-0" th:text="${job.taskdescription}"></p>
+                </div>
+
+                <div class="col-md-6">
+                    <strong>Qualification:</strong>
+                    <span th:text="${job.qualificationLevel.label + ' (rank ' + job.qualificationLevel.rank + ')'}"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <strong>Sectors:</strong>
+                    <span th:if="${job.sectors == null or job.sectors.isEmpty()}" class="text-muted">-</span>
+                    <th:block th:each="sector,iter : ${job.sectors}">
+                        <span th:text="${sector.label}"></span><span th:if="${!iter.last}">, </span>
+                    </th:block>
+                </div>
+            </div>
+
+            <a href="/alljobs" class="btn btn-secondary mt-4">Back to job offers</a>
+        </div>
+    </div>
+</div>
+
+<div th:replace="fragments :: loginModal"></div>
+<th:block th:replace="fragments :: scripts"></th:block>
+</body>
+</html>

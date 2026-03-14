@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments :: head('Applicants')"></head>
+<body>
+
+<nav th:replace="fragments :: navbar"></nav>
+
+<div class="container">
+    <header th:replace="fragments :: pageHeader('Applicants', 'List of all registered applicants')"></header>
+
+    <ul th:replace="fragments :: mainNavigation(null, null, 'active', null, null, null, null)"></ul>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title mb-3">All applicants</h5>
+
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle">
+                    <thead class="table-primary">
+                        <tr>
+                            <th>Lastname</th>
+                            <th>Firstname</th>
+                            <th>City</th>
+                            <th>Published Applications</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:if="${#lists.isEmpty(candidates)}">
+                            <td colspan="5" class="text-center text-muted">No applicant found.</td>
+                        </tr>
+                        <tr th:each="candidate : ${candidates}">
+                            <td th:text="${candidate.lastname}"></td>
+                            <td th:text="${candidate.firstname != null and !#strings.isEmpty(candidate.firstname) ? candidate.firstname : '-'}"></td>
+                            <td th:text="${candidate.city != null and !#strings.isEmpty(candidate.city) ? candidate.city : '-'}"></td>
+                            <td th:text="${candidate.applicationsCount}"></td>
+                            <td>
+                                <a class="btn btn-sm btn-outline-primary"
+                                   th:href="@{/candidate/{mail}(mail=${candidate.mail})}">View</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="fragments :: loginModal"></div>
+<th:block th:replace="fragments :: scripts"></th:block>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments :: head('Modify Company Profile')"></head>
+<body>
+
+<nav th:replace="fragments :: navbar"></nav>
+
+<div class="container">
+    <header th:replace="fragments :: pageHeader('Modify Company Profile', 'Update your company identity and description')"></header>
+
+    <ul th:replace="fragments :: mainNavigation(null, null, null, 'active', null, null, null)"></ul>
+
+    <div th:if="${param.error != null}" class="alert alert-danger">
+        <span th:if="${param.error[0] == 'denomination-required'}">Denomination is required.</span>
+        <span th:if="${param.error[0] == 'denomination-too-long'}">Denomination must not exceed 100 characters.</span>
+        <span th:if="${param.error[0] == 'city-too-long'}">City must not exceed 100 characters.</span>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Company information</h5>
+
+            <form action="/modifycompanyprofile" method="POST" class="row g-3">
+                <input type="hidden" name="mail" th:value="${company.appUser.mail}">
+
+                <div class="col-12">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-control" th:value="${company.appUser.mail}" readonly>
+                </div>
+
+                <div class="col-12">
+                    <label for="denomination" class="form-label">Denomination</label>
+                    <input id="denomination" type="text" name="denomination" class="form-control"
+                           maxlength="100" required th:value="${company.denomination}">
+                </div>
+
+                <div class="col-md-6">
+                    <label for="city" class="form-label">City</label>
+                    <input id="city" type="text" name="city" class="form-control" maxlength="100"
+                           th:value="${company.city}">
+                </div>
+
+                <div class="col-12">
+                    <label for="description" class="form-label">Description</label>
+                    <textarea id="description" name="description" class="form-control" rows="4"
+                              th:text="${company.description}"></textarea>
+                </div>
+
+                <div class="col-12 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                    <a class="btn btn-outline-secondary"
+                       th:href="@{/managemyoffers/{mail}(mail=${company.appUser.mail})}">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div th:replace="fragments :: loginModal"></div>
+<th:block th:replace="fragments :: scripts"></th:block>
+</body>
+</html>

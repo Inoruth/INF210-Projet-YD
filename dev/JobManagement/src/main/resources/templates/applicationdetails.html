@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments :: head('Application Details')"></head>
+<body>
+
+<nav th:replace="fragments :: navbar"></nav>
+
+<div class="container">
+    <header th:replace="fragments :: pageHeader('Application Details', 'Detailed information about a candidate application')"></header>
+
+    <ul th:replace="fragments :: mainNavigation(null, null, null, null, 'active', null, null)"></ul>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Application #<span th:text="${jobApplication.id}"></span></h5>
+
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <strong>Date:</strong>
+                    <span th:text="${jobApplication.appdate}"></span>
+                </div>
+                <div class="col-md-8">
+                    <strong>Candidate:</strong>
+                          <a th:href="@{/candidate/{mail}(mail=${jobApplication.candidate.appUser.mail})}"
+                              th:text="${jobApplication.candidate.firstname + ' ' + jobApplication.candidate.lastname}"></a>
+                </div>
+
+                <div class="col-md-6">
+                    <strong>Candidate email:</strong>
+                    <span th:text="${jobApplication.candidate.appUser.mail}"></span>
+                </div>
+                <div class="col-md-6">
+                    <strong>Candidate city:</strong>
+                    <span th:text="${jobApplication.candidate.city != null and !#strings.isEmpty(jobApplication.candidate.city) ? jobApplication.candidate.city : '-'}"></span>
+                </div>
+
+                <div class="col-12">
+                    <strong>CV:</strong>
+                    <p class="mb-0" th:text="${jobApplication.cv}"></p>
+                </div>
+
+                <div class="col-md-6">
+                    <strong>Qualification:</strong>
+                    <span th:text="${jobApplication.qualificationLevel.label + ' (rank ' + jobApplication.qualificationLevel.rank + ')'}"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <strong>Sectors:</strong>
+                    <span th:if="${jobApplication.sectors == null or jobApplication.sectors.isEmpty()}" class="text-muted">-</span>
+                    <th:block th:each="sector,iter : ${jobApplication.sectors}">
+                        <span th:text="${sector.label}"></span><span th:if="${!iter.last}">, </span>
+                    </th:block>
+                </div>
+            </div>
+
+            <a href="/allapplications" class="btn btn-secondary mt-4">Back to applications</a>
+        </div>
+    </div>
+</div>
+
+<div th:replace="fragments :: loginModal"></div>
+<th:block th:replace="fragments :: scripts"></th:block>
+</body>
+</html>

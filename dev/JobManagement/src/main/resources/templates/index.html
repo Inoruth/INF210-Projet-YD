@@ -36,12 +36,15 @@
                         <div class="card-body">
                             <h5 class="card-title">Company Account</h5>
                             <ul class="list-group">
+                                <li class="list-group-item">
+                                    <a th:href="@{/modifycompanyprofile/{mail}(mail=${session.userMail})}" class="btn btn-sm btn-primary">Edit my company profile</a>
+                                </li>
                                 <li class="list-group-item"><a href="/publishjoboffer" class="btn btn-sm btn-primary">Publish a new job offer</a></li>
                                 <li class="list-group-item">
                                     <a th:href="@{/managemyoffers/{mail}(mail=${session.userMail})}" class="btn btn-sm btn-primary">Manage my offers</a>
                                 </li>
                                 <li class="list-group-item">
-                                    <a th:href="@{/managemymessages/{mail}(mail=${session.userMail})}" class="btn btn-sm btn-primary">Check my messages</a>
+                                    <span class="text-muted">Check my messages (available in Sprint 4)</span>
                                 </li>
                             </ul>
                         </div>
@@ -52,12 +55,14 @@
                         <div class="card-body">
                             <h5 class="card-title">Applicant Account</h5>
                             <ul class="list-group">
-                                <li class="list-group-item"><a href="/publishapplication" class="btn btn-sm btn-primary">Publish a new application</a></li>
                                 <li class="list-group-item">
-                                    <a th:href="@{/managemyapplications/{mail}(mail=${session.userMail})}" class="btn btn-sm btn-primary">Manage my applications</a>
+                                    <span class="text-muted">Publish a new application (available in Sprint 3)</span>
                                 </li>
                                 <li class="list-group-item">
-                                    <a th:href="@{/managemymessages/{mail}(mail=${session.userMail})}" class="btn btn-sm btn-primary">Check my messages</a>
+                                    <span class="text-muted">Manage my applications (available in Sprint 3)</span>
+                                </li>
+                                <li class="list-group-item">
+                                    <span class="text-muted">Check my messages (available in Sprint 4)</span>
                                 </li>
                             </ul>
                         </div>
