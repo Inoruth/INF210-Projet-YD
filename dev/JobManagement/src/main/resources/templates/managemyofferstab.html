@@ -13,6 +13,8 @@
     <div th:if="${param.success != null}" class="alert alert-success">
         <span th:if="${param.success[0] == 'profile-updated'}">Company profile updated successfully.</span>
         <span th:if="${param.success[0] == 'offer-created'}">Job offer published successfully.</span>
+        <span th:if="${param.success[0] == 'offer-updated'}">Job offer updated successfully.</span>
+        <span th:if="${param.success[0] == 'offer-deleted'}">Job offer deleted successfully.</span>
     </div>
 
     <div class="card shadow-sm mb-4">
@@ -59,11 +61,13 @@
                         <th>Date</th>
                         <th>Public page</th>
                         <th>Matches</th>
+                        <th>Edit</th>
+                        <th>Delete</th>
                     </tr>
                     </thead>
                     <tbody>
                     <tr th:if="${#lists.isEmpty(offers)}">
-                        <td colspan="7" class="text-center text-muted">No job offer published yet.</td>
+                        <td colspan="9" class="text-center text-muted">No job offer published yet.</td>
                     </tr>
                     <tr th:each="offer : ${offers}">
                         <td th:text="${offer.id}"></td>
@@ -82,6 +86,16 @@
                         <td>
                             <a class="btn btn-sm btn-outline-primary"
                                th:href="@{/managemyoffers/{mail}/offer/{offerId}/matches(mail=${company.appUser.mail},offerId=${offer.id})}">Open</a>
+                        </td>
+                        <td>
+                            <a class="btn btn-sm btn-outline-warning"
+                               th:href="@{/managemyoffers/{mail}/offer/{offerId}/edit(mail=${company.appUser.mail},offerId=${offer.id})}">Edit</a>
+                        </td>
+                        <td>
+                            <form th:action="@{/managemyoffers/{mail}/offer/{offerId}/delete(mail=${company.appUser.mail},offerId=${offer.id})}" method="POST"
+                                  onsubmit="return confirm('Delete this offer?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                            </form>
                         </td>
                     </tr>
                     </tbody>

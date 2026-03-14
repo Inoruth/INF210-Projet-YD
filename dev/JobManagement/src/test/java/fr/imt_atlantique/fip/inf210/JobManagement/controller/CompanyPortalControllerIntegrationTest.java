@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -75,6 +76,21 @@ class CompanyPortalControllerIntegrationTest {
 
         mockMvc.perform(get("/managemyoffers/{mail}/offer/{offerId}/matches", "anonymous.company@imt-atlantique.fr", 1))
                 .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(get("/managemyoffers/{mail}/offer/{offerId}/edit", "anonymous.company@imt-atlantique.fr", 1))
+                .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(post("/managemyoffers/{mail}/offer/{offerId}/update", "anonymous.company@imt-atlantique.fr", 1)
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .param("title", "Unauthorized title")
+                        .param("taskdescription", "Unauthorized task")
+                        .param("qualificationLevelId", "1")
+                        .param("sectorIds", "1"))
+                .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(post("/managemyoffers/{mail}/offer/{offerId}/delete", "anonymous.company@imt-atlantique.fr", 1)
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -98,6 +114,24 @@ class CompanyPortalControllerIntegrationTest {
                 .andExpect(status().isForbidden());
 
         mockMvc.perform(get("/managemyoffers/{mail}/offer/{offerId}/matches", targetCompany.getAppUser().getMail(), savedTargetOffer.getId())
+                        .session(ownerSession))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(get("/managemyoffers/{mail}/offer/{offerId}/edit", targetCompany.getAppUser().getMail(), savedTargetOffer.getId())
+                        .session(ownerSession))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(post("/managemyoffers/{mail}/offer/{offerId}/update", targetCompany.getAppUser().getMail(), savedTargetOffer.getId())
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .session(ownerSession)
+                        .param("title", "Forbidden update")
+                        .param("taskdescription", "Should be blocked")
+                        .param("qualificationLevelId", level.getId().toString())
+                        .param("sectorIds", sector.getId().toString()))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(post("/managemyoffers/{mail}/offer/{offerId}/delete", targetCompany.getAppUser().getMail(), savedTargetOffer.getId())
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                         .session(ownerSession))
                 .andExpect(status().isForbidden());
 
@@ -173,6 +207,52 @@ class CompanyPortalControllerIntegrationTest {
         mockMvc.perform(get("/managemyoffers/{mail}/offer/{offerId}/matches", company.getAppUser().getMail(), createdOffer.getId())
                         .session(companySession))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void shouldAllowCompanyToUpdateAndDeleteOwnOffer() throws Exception {
+        String token = token();
+
+        Company company = seedCompany("edit." + token + "@imt-atlantique.fr", "Edit Corp " + token);
+        QualificationLevel initialLevel = qualificationLevelRepository.save(new QualificationLevel("Initial Level " + token, (short) 3));
+        QualificationLevel updatedLevel = qualificationLevelRepository.save(new QualificationLevel("Updated Level " + token, (short) 6));
+        Sector initialSector = sectorRepository.save(new Sector("Initial Sector " + token));
+        Sector updatedSector = sectorRepository.save(new Sector("Updated Sector " + token));
+
+        JobOffer offer = new JobOffer("Initial title " + token, "Initial task description", company, initialLevel);
+        offer.getSectors().add(initialSector);
+        JobOffer savedOffer = jobOfferRepository.save(offer);
+
+        MockHttpSession companySession = buildSession(company.getAppUser().getMail(), AppUser.UserType.company);
+
+        mockMvc.perform(get("/managemyoffers/{mail}/offer/{offerId}/edit", company.getAppUser().getMail(), savedOffer.getId())
+                        .session(companySession))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/managemyoffers/{mail}/offer/{offerId}/update", company.getAppUser().getMail(), savedOffer.getId())
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .session(companySession)
+                        .param("title", "Updated title " + token)
+                        .param("taskdescription", "Updated task description")
+                        .param("qualificationLevelId", updatedLevel.getId().toString())
+                        .param("sectorIds", updatedSector.getId().toString()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/managemyoffers/" + company.getAppUser().getMail() + "?success=offer-updated"));
+
+        JobOffer updatedOffer = jobOfferRepository.findById(savedOffer.getId()).orElseThrow();
+        assertEquals("Updated title " + token, updatedOffer.getTitle());
+        assertEquals("Updated task description", updatedOffer.getTaskdescription());
+        assertEquals(updatedLevel.getId(), updatedOffer.getQualificationLevel().getId());
+        assertEquals(1, updatedOffer.getSectors().size());
+        assertTrue(updatedOffer.getSectors().stream().anyMatch(s -> s.getId().equals(updatedSector.getId())));
+
+        mockMvc.perform(post("/managemyoffers/{mail}/offer/{offerId}/delete", company.getAppUser().getMail(), savedOffer.getId())
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .session(companySession))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/managemyoffers/" + company.getAppUser().getMail() + "?success=offer-deleted"));
+
+        assertFalse(jobOfferRepository.findById(savedOffer.getId()).isPresent());
     }
 
     private Company seedCompany(String mail, String denomination) {

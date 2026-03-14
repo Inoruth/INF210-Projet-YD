@@ -18,7 +18,7 @@ import fr.imt_atlantique.fip.inf210.jobmanagement.repository.SectorJpaRepository
 
 @Service
 public class SectorServiceImpl implements SectorService {
-    
+
     @Autowired
     private SectorJpaRepository sectorRepository;
 

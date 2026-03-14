@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -75,6 +76,20 @@ class CandidatePortalControllerIntegrationTest {
 
         mockMvc.perform(get("/managemyapplications/{mail}/application/{applicationId}/matches", "anonymous.candidate@imt-atlantique.fr", 1))
                 .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(get("/managemyapplications/{mail}/application/{applicationId}/edit", "anonymous.candidate@imt-atlantique.fr", 1))
+                .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(post("/managemyapplications/{mail}/application/{applicationId}/update", "anonymous.candidate@imt-atlantique.fr", 1)
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .param("cv", "unauthorized-cv.pdf")
+                        .param("qualificationLevelId", "1")
+                        .param("sectorIds", "1"))
+                .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(post("/managemyapplications/{mail}/application/{applicationId}/delete", "anonymous.candidate@imt-atlantique.fr", 1)
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -100,6 +115,28 @@ class CandidatePortalControllerIntegrationTest {
         mockMvc.perform(get("/managemyapplications/{mail}/application/{applicationId}/matches",
                         targetCandidate.getAppUser().getMail(),
                         savedTargetApplication.getId()).session(ownerSession))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(get("/managemyapplications/{mail}/application/{applicationId}/edit",
+                        targetCandidate.getAppUser().getMail(),
+                        savedTargetApplication.getId()).session(ownerSession))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(post("/managemyapplications/{mail}/application/{applicationId}/update",
+                        targetCandidate.getAppUser().getMail(),
+                        savedTargetApplication.getId())
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .session(ownerSession)
+                        .param("cv", "forbidden-cv.pdf")
+                        .param("qualificationLevelId", level.getId().toString())
+                        .param("sectorIds", sector.getId().toString()))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(post("/managemyapplications/{mail}/application/{applicationId}/delete",
+                        targetCandidate.getAppUser().getMail(),
+                        savedTargetApplication.getId())
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .session(ownerSession))
                 .andExpect(status().isForbidden());
 
         mockMvc.perform(post("/modifycandidateprofile")
@@ -174,6 +211,50 @@ class CandidatePortalControllerIntegrationTest {
                         candidate.getAppUser().getMail(),
                         createdApplication.getId()).session(candidateSession))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    void shouldAllowCandidateToUpdateAndDeleteOwnApplication() throws Exception {
+        String token = token();
+
+        Candidate candidate = seedCandidate("edit." + token + "@imt-atlantique.fr", "Candidate" + token);
+        QualificationLevel initialLevel = qualificationLevelRepository.save(new QualificationLevel("Initial Level " + token, (short) 3));
+        QualificationLevel updatedLevel = qualificationLevelRepository.save(new QualificationLevel("Updated Level " + token, (short) 7));
+        Sector initialSector = sectorRepository.save(new Sector("Initial Sector " + token));
+        Sector updatedSector = sectorRepository.save(new Sector("Updated Sector " + token));
+
+        Application application = new Application("initial-cv-" + token + ".pdf", candidate, initialLevel);
+        application.getSectors().add(initialSector);
+        Application savedApplication = applicationRepository.save(application);
+
+        MockHttpSession candidateSession = buildSession(candidate.getAppUser().getMail(), AppUser.UserType.applicant);
+
+        mockMvc.perform(get("/managemyapplications/{mail}/application/{applicationId}/edit", candidate.getAppUser().getMail(), savedApplication.getId())
+                        .session(candidateSession))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/managemyapplications/{mail}/application/{applicationId}/update", candidate.getAppUser().getMail(), savedApplication.getId())
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .session(candidateSession)
+                        .param("cv", "updated-cv-" + token + ".pdf")
+                        .param("qualificationLevelId", updatedLevel.getId().toString())
+                        .param("sectorIds", updatedSector.getId().toString()))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/managemyapplications/" + candidate.getAppUser().getMail() + "?success=application-updated"));
+
+        Application updatedApplication = applicationRepository.findById(savedApplication.getId()).orElseThrow();
+        assertEquals("updated-cv-" + token + ".pdf", updatedApplication.getCv());
+        assertEquals(updatedLevel.getId(), updatedApplication.getQualificationLevel().getId());
+        assertEquals(1, updatedApplication.getSectors().size());
+        assertTrue(updatedApplication.getSectors().stream().anyMatch(s -> s.getId().equals(updatedSector.getId())));
+
+        mockMvc.perform(post("/managemyapplications/{mail}/application/{applicationId}/delete", candidate.getAppUser().getMail(), savedApplication.getId())
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .session(candidateSession))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/managemyapplications/" + candidate.getAppUser().getMail() + "?success=application-deleted"));
+
+        assertFalse(applicationRepository.findById(savedApplication.getId()).isPresent());
     }
 
     private Candidate seedCandidate(String mail, String lastname) {

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments :: head('Modify Job Offer')"></head>
+<body>
+
+<nav th:replace="fragments :: navbar"></nav>
+
+<div class="container">
+    <header th:replace="fragments :: pageHeader('Modify Job Offer', 'Update an existing offer from your company account')"></header>
+
+    <ul th:replace="fragments :: mainNavigation(null, null, null, 'active', null, null, null)"></ul>
+
+    <div th:if="${param.error != null}" class="alert alert-danger">
+        <span th:if="${param.error[0] == 'title-required'}">Title is required.</span>
+        <span th:if="${param.error[0] == 'title-too-long'}">Title must not exceed 120 characters.</span>
+        <span th:if="${param.error[0] == 'taskdescription-required'}">Task description is required.</span>
+        <span th:if="${param.error[0] == 'qualification-required'}">A valid qualification level is required.</span>
+        <span th:if="${param.error[0] == 'sectors-required'}">Select at least one sector.</span>
+        <span th:if="${param.error[0] == 'invalid-sector'}">Selected sectors are invalid.</span>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Offer #<span th:text="${offer.id}"></span></h5>
+            <p class="text-muted mb-4">
+                Company: <strong th:text="${company.denomination}"></strong>
+                (<span th:text="${company.appUser.mail}"></span>)
+            </p>
+
+            <form th:action="@{/managemyoffers/{mail}/offer/{offerId}/update(mail=${company.appUser.mail},offerId=${offer.id})}" method="POST" class="row g-3">
+                <div class="col-12">
+                    <label for="title" class="form-label">Title</label>
+                    <input id="title" name="title" type="text" class="form-control" maxlength="120" required th:value="${offer.title}">
+                </div>
+
+                <div class="col-12">
+                    <label for="taskdescription" class="form-label">Task description</label>
+                    <textarea id="taskdescription" name="taskdescription" class="form-control" rows="5" required th:text="${offer.taskdescription}"></textarea>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="qualificationLevelId" class="form-label">Required qualification level</label>
+                    <select id="qualificationLevelId" name="qualificationLevelId" class="form-select" required>
+                        <option value="">Choose a qualification level</option>
+                        <option th:each="level : ${qualificationLevels}"
+                                th:value="${level.id}"
+                                th:text="${level.label + ' (rank ' + level.rank + ')'}"
+                                th:selected="${offer.qualificationLevel != null and offer.qualificationLevel.id == level.id}"></option>
+                    </select>
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label">Sectors</label>
+                    <div class="d-flex flex-wrap gap-3">
+                        <div class="form-check" th:each="sector : ${sectors}">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   name="sectorIds"
+                                   th:id="${'edit-sector-' + sector.id}"
+                                   th:value="${sector.id}"
+                                   th:checked="${offer.sectors != null and offer.sectors.contains(sector)}">
+                            <label class="form-check-label" th:for="${'edit-sector-' + sector.id}" th:text="${sector.label}"></label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                    <a class="btn btn-outline-secondary" th:href="@{/managemyoffers/{mail}(mail=${company.appUser.mail})}">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div th:replace="fragments :: loginModal"></div>
+<th:block th:replace="fragments :: scripts"></th:block>
+</body>
+</html>

@@ -132,6 +132,83 @@ public class CandidatePortalController {
         return "redirect:/managemyapplications/" + candidateMail + "?success=application-created";
     }
 
+    // Ouvre le formulaire de modification d une candidature appartenant au candidat.
+    @GetMapping("/managemyapplications/{mail:.+}/application/{applicationId}/edit")
+    public ModelAndView getModifyApplicationForm(@PathVariable String mail,
+                                                 @PathVariable Integer applicationId,
+                                                 HttpSession session) {
+        requireCandidateOwnerOrAdmin(session, mail);
+
+        Candidate candidate = findCandidateOrThrow(mail);
+        Application jobApplication = applicationService.findByIdAndCandidateId(applicationId, candidate.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Application not found for this candidate"));
+
+        ModelAndView mav = new ModelAndView("modifyapplication.html");
+        mav.addObject("candidate", candidate);
+        mav.addObject("jobApplication", jobApplication);
+        mav.addObject("sectors", getSortedSectors());
+        mav.addObject("qualificationLevels", getSortedQualificationLevels());
+        return mav;
+    }
+
+    // Met a jour une candidature appartenant au candidat.
+    @PostMapping("/managemyapplications/{mail:.+}/application/{applicationId}/update")
+    public String updateApplication(@PathVariable String mail,
+                                    @PathVariable Integer applicationId,
+                                    @RequestParam("cv") String cv,
+                                    @RequestParam("qualificationLevelId") Integer qualificationLevelId,
+                                    @RequestParam(name = "sectorIds", required = false) List<Integer> sectorIds,
+                                    HttpSession session) {
+        requireCandidateOwnerOrAdmin(session, mail);
+
+        Candidate candidate = findCandidateOrThrow(mail);
+        Application jobApplication = applicationService.findByIdAndCandidateId(applicationId, candidate.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Application not found for this candidate"));
+
+        String normalizedCv = normalizeRequiredText(cv);
+        if (normalizedCv.isEmpty()) {
+            return "redirect:/managemyapplications/" + mail + "/application/" + applicationId + "/edit?error=cv-required";
+        }
+
+        QualificationLevel qualificationLevel = qualificationLevelRepository.findById(qualificationLevelId)
+                .orElse(null);
+        if (qualificationLevel == null) {
+            return "redirect:/managemyapplications/" + mail + "/application/" + applicationId + "/edit?error=qualification-required";
+        }
+
+        Set<Integer> selectedSectorIds = normalizeSectorIds(sectorIds);
+        if (selectedSectorIds.isEmpty()) {
+            return "redirect:/managemyapplications/" + mail + "/application/" + applicationId + "/edit?error=sectors-required";
+        }
+
+        List<Sector> sectors = sectorRepository.findAllById(selectedSectorIds);
+        if (sectors.size() != selectedSectorIds.size()) {
+            return "redirect:/managemyapplications/" + mail + "/application/" + applicationId + "/edit?error=invalid-sector";
+        }
+
+        jobApplication.setCv(normalizedCv);
+        jobApplication.setQualificationLevel(qualificationLevel);
+        jobApplication.setSectors(new LinkedHashSet<>(sectors));
+        applicationService.save(jobApplication);
+
+        return "redirect:/managemyapplications/" + mail + "?success=application-updated";
+    }
+
+    // Supprime une candidature appartenant au candidat.
+    @PostMapping("/managemyapplications/{mail:.+}/application/{applicationId}/delete")
+    public String deleteApplication(@PathVariable String mail,
+                                    @PathVariable Integer applicationId,
+                                    HttpSession session) {
+        requireCandidateOwnerOrAdmin(session, mail);
+
+        Candidate candidate = findCandidateOrThrow(mail);
+        Application jobApplication = applicationService.findByIdAndCandidateId(applicationId, candidate.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Application not found for this candidate"));
+
+        applicationService.deleteByIdAndCandidateId(jobApplication.getId(), candidate.getId());
+        return "redirect:/managemyapplications/" + mail + "?success=application-deleted";
+    }
+
     // Ouvre le formulaire de modification du profil candidat.
     @GetMapping("/modifycandidateprofile/{mail:.+}")
     public ModelAndView getModifyCandidateProfile(@PathVariable String mail, HttpSession session) {

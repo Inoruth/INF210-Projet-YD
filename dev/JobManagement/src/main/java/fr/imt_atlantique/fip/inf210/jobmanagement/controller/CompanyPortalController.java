@@ -141,6 +141,93 @@ public class CompanyPortalController {
         return "redirect:/managemyoffers/" + companyMail + "?success=offer-created";
     }
 
+    // Ouvre le formulaire de modification d une offre appartenant a l entreprise.
+    @GetMapping("/managemyoffers/{mail:.+}/offer/{offerId}/edit")
+    public ModelAndView getModifyJobOfferForm(@PathVariable String mail,
+                                              @PathVariable Integer offerId,
+                                              HttpSession session) {
+        requireCompanyOwnerOrAdmin(session, mail);
+
+        Company company = findCompanyOrThrow(mail);
+        JobOffer offer = jobOfferService.findByIdAndCompanyId(offerId, company.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Job offer not found for this company"));
+
+        ModelAndView mav = new ModelAndView("modifyjoboffer.html");
+        mav.addObject("company", company);
+        mav.addObject("offer", offer);
+        mav.addObject("sectors", getSortedSectors());
+        mav.addObject("qualificationLevels", getSortedQualificationLevels());
+        return mav;
+    }
+
+    // Met a jour une offre appartenant a l entreprise.
+    @PostMapping("/managemyoffers/{mail:.+}/offer/{offerId}/update")
+    public String updateJobOffer(@PathVariable String mail,
+                                 @PathVariable Integer offerId,
+                                 @RequestParam("title") String title,
+                                 @RequestParam("taskdescription") String taskDescription,
+                                 @RequestParam("qualificationLevelId") Integer qualificationLevelId,
+                                 @RequestParam(name = "sectorIds", required = false) List<Integer> sectorIds,
+                                 HttpSession session) {
+        requireCompanyOwnerOrAdmin(session, mail);
+
+        Company company = findCompanyOrThrow(mail);
+        JobOffer offer = jobOfferService.findByIdAndCompanyId(offerId, company.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Job offer not found for this company"));
+
+        String normalizedTitle = normalizeRequiredText(title);
+        if (normalizedTitle.isEmpty()) {
+            return "redirect:/managemyoffers/" + mail + "/offer/" + offerId + "/edit?error=title-required";
+        }
+        if (normalizedTitle.length() > 120) {
+            return "redirect:/managemyoffers/" + mail + "/offer/" + offerId + "/edit?error=title-too-long";
+        }
+
+        String normalizedTaskDescription = normalizeRequiredText(taskDescription);
+        if (normalizedTaskDescription.isEmpty()) {
+            return "redirect:/managemyoffers/" + mail + "/offer/" + offerId + "/edit?error=taskdescription-required";
+        }
+
+        QualificationLevel qualificationLevel = qualificationLevelRepository.findById(qualificationLevelId)
+                .orElse(null);
+        if (qualificationLevel == null) {
+            return "redirect:/managemyoffers/" + mail + "/offer/" + offerId + "/edit?error=qualification-required";
+        }
+
+        Set<Integer> selectedSectorIds = normalizeSectorIds(sectorIds);
+        if (selectedSectorIds.isEmpty()) {
+            return "redirect:/managemyoffers/" + mail + "/offer/" + offerId + "/edit?error=sectors-required";
+        }
+
+        List<Sector> sectors = sectorRepository.findAllById(selectedSectorIds);
+        if (sectors.size() != selectedSectorIds.size()) {
+            return "redirect:/managemyoffers/" + mail + "/offer/" + offerId + "/edit?error=invalid-sector";
+        }
+
+        offer.setTitle(normalizedTitle);
+        offer.setTaskdescription(normalizedTaskDescription);
+        offer.setQualificationLevel(qualificationLevel);
+        offer.setSectors(new LinkedHashSet<>(sectors));
+        jobOfferService.save(offer);
+
+        return "redirect:/managemyoffers/" + mail + "?success=offer-updated";
+    }
+
+    // Supprime une offre appartenant a l entreprise.
+    @PostMapping("/managemyoffers/{mail:.+}/offer/{offerId}/delete")
+    public String deleteJobOffer(@PathVariable String mail,
+                                 @PathVariable Integer offerId,
+                                 HttpSession session) {
+        requireCompanyOwnerOrAdmin(session, mail);
+
+        Company company = findCompanyOrThrow(mail);
+        JobOffer offer = jobOfferService.findByIdAndCompanyId(offerId, company.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Job offer not found for this company"));
+
+        jobOfferService.deleteByIdAndCompanyId(offer.getId(), company.getId());
+        return "redirect:/managemyoffers/" + mail + "?success=offer-deleted";
+    }
+
     // Ouvre le formulaire de modification du profil entreprise.
     @GetMapping("/modifycompanyprofile/{mail:.+}")
     public ModelAndView getModifyCompanyProfile(@PathVariable String mail, HttpSession session) {

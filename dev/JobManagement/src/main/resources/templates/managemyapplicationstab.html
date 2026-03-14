@@ -13,6 +13,8 @@
     <div th:if="${param.success != null}" class="alert alert-success">
         <span th:if="${param.success[0] == 'profile-updated'}">Candidate profile updated successfully.</span>
         <span th:if="${param.success[0] == 'application-created'}">Application published successfully.</span>
+        <span th:if="${param.success[0] == 'application-updated'}">Application updated successfully.</span>
+        <span th:if="${param.success[0] == 'application-deleted'}">Application deleted successfully.</span>
     </div>
 
     <div class="card shadow-sm mb-4">
@@ -59,11 +61,13 @@
                         <th>Date</th>
                         <th>Public page</th>
                         <th>Matches</th>
+                        <th>Edit</th>
+                        <th>Delete</th>
                     </tr>
                     </thead>
                     <tbody>
                     <tr th:if="${#lists.isEmpty(applications)}">
-                        <td colspan="7" class="text-center text-muted">No application published yet.</td>
+                        <td colspan="9" class="text-center text-muted">No application published yet.</td>
                     </tr>
                     <tr th:each="jobApplication : ${applications}">
                         <td th:text="${jobApplication.id}"></td>
@@ -82,6 +86,16 @@
                         <td>
                             <a class="btn btn-sm btn-outline-primary"
                                th:href="@{/managemyapplications/{mail}/application/{applicationId}/matches(mail=${candidate.appUser.mail},applicationId=${jobApplication.id})}">Open</a>
+                        </td>
+                        <td>
+                            <a class="btn btn-sm btn-outline-warning"
+                               th:href="@{/managemyapplications/{mail}/application/{applicationId}/edit(mail=${candidate.appUser.mail},applicationId=${jobApplication.id})}">Edit</a>
+                        </td>
+                        <td>
+                            <form th:action="@{/managemyapplications/{mail}/application/{applicationId}/delete(mail=${candidate.appUser.mail},applicationId=${jobApplication.id})}" method="POST"
+                                  onsubmit="return confirm('Delete this application?');">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                            </form>
                         </td>
                     </tr>
                     </tbody>
