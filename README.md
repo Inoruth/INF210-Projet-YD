@@ -61,6 +61,7 @@ docker compose up -d db
 
 The first startup automatically:
 
+- executes `dev/Data/create-multiple-postgresql-databases.sh`,
 - creates database `jobmanagement_db`,
 - loads `create_db_jobmanagement.sql` (schema + seed users).
 

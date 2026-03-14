@@ -6,20 +6,14 @@ services:
     environment:
       POSTGRES_USER: pguser
       POSTGRES_PASSWORD: pgpwd
-      POSTGRES_DB: jobmanagement_db
+      POSTGRES_MULTIPLE_DATABASES: "jobmanagement_db,/docker-entrypoint-initdb.d/SQL_Scripts/create_db_jobmanagement.sql"
     ports:
       - "5432:5432"
     networks:
       vnet_inf210:
         ipv4_address: 10.5.0.8
     volumes:
-      - postgres_data:/var/lib/postgresql
-      - ./Data/SQL_Scripts/create_db_jobmanagement.sql:/docker-entrypoint-initdb.d/01_create_db_jobmanagement.sql:ro
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U pguser -d jobmanagement_db"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      - ./Data/:/docker-entrypoint-initdb.d/
    
        
   pgadmin:
@@ -47,6 +41,3 @@ networks:
     ipam:
      config:
        - subnet: 10.5.0.0/16
-
-volumes:
-  postgres_data:
