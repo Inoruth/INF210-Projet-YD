@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments :: head('Publish Application')"></head>
+<body>
+
+<nav th:replace="fragments :: navbar"></nav>
+
+<div class="container">
+    <header th:replace="fragments :: pageHeader('Publish an Application', 'Create a new profile application from your candidate account')"></header>
+
+    <ul th:replace="fragments :: mainNavigation(null, null, null, null, 'active', null, null)"></ul>
+
+    <div th:if="${param.error != null}" class="alert alert-danger">
+        <span th:if="${param.error[0] == 'cv-required'}">CV content is required.</span>
+        <span th:if="${param.error[0] == 'qualification-required'}">A valid qualification level is required.</span>
+        <span th:if="${param.error[0] == 'sectors-required'}">Select at least one sector.</span>
+        <span th:if="${param.error[0] == 'invalid-sector'}">Selected sectors are invalid.</span>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Application details</h5>
+            <p class="text-muted mb-4">
+                Published as: <strong th:text="${candidate.lastname + ' ' + candidate.firstname}"></strong>
+                (<span th:text="${candidate.appUser.mail}"></span>)
+            </p>
+
+            <form action="/publishapplication" method="POST" class="row g-3">
+                <div class="col-12">
+                    <label for="cv" class="form-label">CV content or path</label>
+                    <textarea id="cv" name="cv" class="form-control" rows="5" required></textarea>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="qualificationLevelId" class="form-label">Qualification level</label>
+                    <select id="qualificationLevelId" name="qualificationLevelId" class="form-select" required>
+                        <option value="">Choose a qualification level</option>
+                        <option th:each="level : ${qualificationLevels}"
+                                th:value="${level.id}"
+                                th:text="${level.label + ' (rank ' + level.rank + ')'}"></option>
+                    </select>
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label">Sectors</label>
+                    <div class="d-flex flex-wrap gap-3">
+                        <div class="form-check" th:each="sector : ${sectors}">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   name="sectorIds"
+                                   th:id="${'app-sector-' + sector.id}"
+                                   th:value="${sector.id}">
+                            <label class="form-check-label" th:for="${'app-sector-' + sector.id}" th:text="${sector.label}"></label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">Publish application</button>
+                    <a class="btn btn-outline-secondary"
+                       th:href="@{/managemyapplications/{mail}(mail=${candidate.appUser.mail})}">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div th:replace="fragments :: loginModal"></div>
+<th:block th:replace="fragments :: scripts"></th:block>
+</body>
+</html>

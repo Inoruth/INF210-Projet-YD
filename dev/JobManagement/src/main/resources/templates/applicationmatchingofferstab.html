@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments :: head('Matching Job Offers')"></head>
+<body>
+
+<nav th:replace="fragments :: navbar"></nav>
+
+<div class="container">
+    <header th:replace="fragments :: pageHeader('Matching Job Offers', 'Job offers compatible with your selected application')"></header>
+
+    <ul th:replace="fragments :: mainNavigation(null, null, null, null, 'active', null, null)"></ul>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Application summary</h5>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <strong>Application ID:</strong>
+                    <span th:text="${jobApplication.id}"></span>
+                </div>
+                <div class="col-md-6">
+                    <strong>Candidate:</strong>
+                    <span th:text="${candidate.firstname + ' ' + candidate.lastname}"></span>
+                </div>
+                <div class="col-md-6">
+                    <strong>Qualification:</strong>
+                    <span th:text="${jobApplication.qualificationLevel.label + ' (rank ' + jobApplication.qualificationLevel.rank + ')'}"></span>
+                </div>
+                <div class="col-md-6">
+                    <strong>Publication date:</strong>
+                    <span th:text="${jobApplication.appdate}"></span>
+                </div>
+                <div class="col-12">
+                    <strong>CV:</strong>
+                    <span th:text="${jobApplication.cv}"></span>
+                </div>
+                <div class="col-12">
+                    <strong>Sectors:</strong>
+                    <span th:if="${jobApplication.sectors == null or jobApplication.sectors.isEmpty()}" class="text-muted">-</span>
+                    <th:block th:each="sector,iter : ${jobApplication.sectors}">
+                        <span th:text="${sector.label}"></span><span th:if="${!iter.last}">, </span>
+                    </th:block>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Matching offers</h5>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle">
+                    <thead class="table-primary">
+                    <tr>
+                        <th>ID</th>
+                        <th>Title</th>
+                        <th>Company</th>
+                        <th>Sectors</th>
+                        <th>Qualification</th>
+                        <th>Date</th>
+                        <th>Details</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(offers)}">
+                        <td colspan="7" class="text-center text-muted">No matching job offer found for this application.</td>
+                    </tr>
+                    <tr th:each="offer : ${offers}">
+                        <td th:text="${offer.id}"></td>
+                        <td th:text="${offer.title}"></td>
+                        <td>
+                            <a th:href="@{/company/{mail}(mail=${offer.company.appUser.mail})}"
+                               th:text="${offer.company.denomination}"></a>
+                        </td>
+                        <td>
+                            <span th:if="${offer.sectors == null or offer.sectors.isEmpty()}" class="text-muted">-</span>
+                            <th:block th:each="sector,iter : ${offer.sectors}">
+                                <span th:text="${sector.label}"></span><span th:if="${!iter.last}">, </span>
+                            </th:block>
+                        </td>
+                        <td th:text="${offer.qualificationLevel.label + ' (rank ' + offer.qualificationLevel.rank + ')'}"></td>
+                        <td th:text="${offer.publicationdate}"></td>
+                        <td>
+                            <a class="btn btn-sm btn-outline-primary" th:href="@{/job/{id}(id=${offer.id})}">View</a>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <a class="btn btn-secondary mt-3"
+               th:href="@{/managemyapplications/{mail}(mail=${candidate.appUser.mail})}">Back to my applications</a>
+        </div>
+    </div>
+</div>
+
+<div th:replace="fragments :: loginModal"></div>
+<th:block th:replace="fragments :: scripts"></th:block>
+</body>
+</html>

@@ -7,7 +7,8 @@ Etat: implementation en cours
 
 - Sprint 1: termine (routes et pages publiques vitales + tests d integration publics).
 - Sprint 2: termine (profil entreprise, publication d offre, gestion des offres, matching offres/candidatures + tests d integration).
-- Sprint 3 a 6: a poursuivre.
+- Sprint 3: termine (profil candidat, publication de candidature, gestion des candidatures, matching candidatures/offres + tests d integration).
+- Sprint 4 a 6: a poursuivre.
 
 ## Sprint 1 - Fonctionnalites vitales publiques
 
