@@ -1,7 +1,7 @@
 # Plan Livrable 3 - Execution et Qualite
 
 Date: 2026-03-14
-Branche cible: partie2
+Branche cible: partie3
 
 ## Sources de reference
 
@@ -14,6 +14,12 @@ Branche cible: partie2
 ## Objectif final
 
 Terminer la connexion couche presentation <-> couche metier, couvrir toutes les fonctionnalites vitales, maximiser les mineures, livrer une application demontrable en 15 minutes avec une fiche recette propre et une archive executable sans modification.
+
+## Note de suivi
+
+- Ce document decrit le plan de travail initial.
+- Le statut d execution a jour est suivi dans `LIVRABLE3_BACKLOG.md`.
+- La validation ligne par ligne est detaillee dans `LIVRABLE3_RECETTE.md`.
 
 ## Etat de depart constate
 

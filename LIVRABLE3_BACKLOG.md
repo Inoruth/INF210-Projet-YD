@@ -1,14 +1,26 @@
-# Backlog Livrable 3 - Demarrage implementation
+# Backlog Livrable 3 - Suivi implementation
 
 Date: 2026-03-14
-Etat: implementation en cours
+Etat: sprint 1 a 4 termines, sprint 5 et 6 en finalisation
 
 ## Statut actuel
 
-- Sprint 1: termine (routes et pages publiques vitales + tests d integration publics).
-- Sprint 2: termine (profil entreprise, publication d offre, gestion des offres, matching offres/candidatures + tests d integration).
-- Sprint 3: termine (profil candidat, publication de candidature, gestion des candidatures, matching candidatures/offres + tests d integration).
-- Sprint 4 a 6: a poursuivre.
+- Sprint 1: termine (routes et pages publiques vitales + tests integration publics).
+- Sprint 2: termine (profil entreprise, publication offre, gestion des offres, matching offres/candidatures + tests integration).
+- Sprint 3: termine (profil candidat, publication candidature, gestion candidatures, matching candidatures/offres + tests integration).
+- Sprint 4: termine (edition/suppression offre et candidature, messagerie manuelle bidirectionnelle, historiques messages cote entreprise et candidat).
+- Sprint 5: en cours de cloture.
+	- tests integration web des routes vitales: OK.
+	- tests controles acces 401/403 routes sensibles: OK.
+	- tests de non-regression flux critiques (create/update/delete/match/message): OK.
+	- fiche recette ligne par ligne: brouillon markdown ajoute (reste la recopie finale dans le support officiel PDF).
+	- script de demo 15 minutes: prepare.
+- Sprint 6: en cours de cloture.
+	- `mvn clean`: OK (BUILD SUCCESS).
+	- `mvn test`: OK (BUILD SUCCESS, 168 tests, 0 failure, 0 error).
+	- `mvn package -DskipTests`: OK (jar executable genere).
+	- verification execution sur environnement propre: partiellement bloquee sur cette machine (Docker absent).
+	- verification archive finale et nommage: a faire juste avant rendu.
 
 ## Sprint 1 - Fonctionnalites vitales publiques
 
@@ -58,3 +70,9 @@ Etat: implementation en cours
 - Verifier execution de l application sur environnement propre.
 - Verifier contenu final de l archive livrable 3.
 - Produire archive de rendu au bon format et bon nom.
+
+## Reste a faire avant soumission finale
+
+- Executer un run complet `docker compose up -d` + `mvn spring-boot:run` sur une machine avec Docker.
+- Reporter les validations O/N/commentaires dans la fiche recette officielle PDF.
+- Generer l archive finale livrable 3 avec verification manuelle du contenu.
