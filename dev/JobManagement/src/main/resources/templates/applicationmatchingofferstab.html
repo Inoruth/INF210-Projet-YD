@@ -10,6 +10,15 @@
 
     <ul th:replace="fragments :: mainNavigation(null, null, null, null, 'active', null, null)"></ul>
 
+    <div th:if="${param.success != null}" class="alert alert-success">
+        <span th:if="${param.success[0] == 'manual-message-sent'}">Message sent to company successfully.</span>
+    </div>
+
+    <div th:if="${param.error != null}" class="alert alert-danger">
+        <span th:if="${param.error[0] == 'message-required'}">Message is required.</span>
+        <span th:if="${param.error[0] == 'message-too-long'}">Message must not exceed 4000 characters.</span>
+    </div>
+
     <div class="card shadow-sm mb-4">
         <div class="card-body">
             <h5 class="card-title mb-3">Application summary</h5>
@@ -59,11 +68,12 @@
                         <th>Qualification</th>
                         <th>Date</th>
                         <th>Details</th>
+                        <th>Message</th>
                     </tr>
                     </thead>
                     <tbody>
                     <tr th:if="${#lists.isEmpty(offers)}">
-                        <td colspan="7" class="text-center text-muted">No matching job offer found for this application.</td>
+                        <td colspan="8" class="text-center text-muted">No matching job offer found for this application.</td>
                     </tr>
                     <tr th:each="offer : ${offers}">
                         <td th:text="${offer.id}"></td>
@@ -82,6 +92,14 @@
                         <td th:text="${offer.publicationdate}"></td>
                         <td>
                             <a class="btn btn-sm btn-outline-primary" th:href="@{/job/{id}(id=${offer.id})}">View</a>
+                        </td>
+                        <td>
+                            <form method="POST"
+                                  th:action="@{/managemyapplications/{mail}/application/{applicationId}/offer/{offerId}/message(mail=${candidate.appUser.mail},applicationId=${jobApplication.id},offerId=${offer.id})}">
+                                <textarea class="form-control form-control-sm" name="message" rows="2" maxlength="4000"
+                                          placeholder="Write a message to this company" required></textarea>
+                                <button type="submit" class="btn btn-sm btn-outline-success mt-2">Send</button>
+                            </form>
                         </td>
                     </tr>
                     </tbody>

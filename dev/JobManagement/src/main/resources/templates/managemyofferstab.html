@@ -43,6 +43,8 @@
                 <a class="btn btn-outline-primary"
                    th:href="@{/modifycompanyprofile/{mail}(mail=${company.appUser.mail})}">Edit profile</a>
                 <a class="btn btn-primary" href="/publishjoboffer">Publish a new offer</a>
+                <a class="btn btn-outline-secondary"
+                   th:href="@{/managemyoffers/{mail}/messages(mail=${company.appUser.mail})}">My messages</a>
             </div>
         </div>
     </div>

@@ -31,6 +31,7 @@ import fr.imt_atlantique.fip.inf210.jobmanagement.repository.ApplicationJpaRepos
 import fr.imt_atlantique.fip.inf210.jobmanagement.repository.CandidateJpaRepository;
 import fr.imt_atlantique.fip.inf210.jobmanagement.repository.CompanyJpaRepository;
 import fr.imt_atlantique.fip.inf210.jobmanagement.repository.JobOfferJpaRepository;
+import fr.imt_atlantique.fip.inf210.jobmanagement.repository.MessageToApplicationJpaRepository;
 import fr.imt_atlantique.fip.inf210.jobmanagement.repository.QualificationLevelRepository;
 import fr.imt_atlantique.fip.inf210.jobmanagement.repository.SectorJpaRepository;
 
@@ -57,6 +58,9 @@ class CandidatePortalControllerIntegrationTest {
     @Autowired
     private ApplicationJpaRepository applicationRepository;
 
+        @Autowired
+        private MessageToApplicationJpaRepository messageToApplicationRepository;
+
     @Autowired
     private QualificationLevelRepository qualificationLevelRepository;
 
@@ -80,6 +84,9 @@ class CandidatePortalControllerIntegrationTest {
         mockMvc.perform(get("/managemyapplications/{mail}/application/{applicationId}/edit", "anonymous.candidate@imt-atlantique.fr", 1))
                 .andExpect(status().isUnauthorized());
 
+        mockMvc.perform(get("/managemyapplications/{mail}/messages", "anonymous.candidate@imt-atlantique.fr"))
+                .andExpect(status().isUnauthorized());
+
         mockMvc.perform(post("/managemyapplications/{mail}/application/{applicationId}/update", "anonymous.candidate@imt-atlantique.fr", 1)
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                         .param("cv", "unauthorized-cv.pdf")
@@ -89,6 +96,12 @@ class CandidatePortalControllerIntegrationTest {
 
         mockMvc.perform(post("/managemyapplications/{mail}/application/{applicationId}/delete", "anonymous.candidate@imt-atlantique.fr", 1)
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED))
+                .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(post("/managemyapplications/{mail}/application/{applicationId}/offer/{offerId}/message",
+                        "anonymous.candidate@imt-atlantique.fr", 1, 1)
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .param("message", "Unauthorized message"))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -122,6 +135,10 @@ class CandidatePortalControllerIntegrationTest {
                         savedTargetApplication.getId()).session(ownerSession))
                 .andExpect(status().isForbidden());
 
+        mockMvc.perform(get("/managemyapplications/{mail}/messages", targetCandidate.getAppUser().getMail())
+                        .session(ownerSession))
+                .andExpect(status().isForbidden());
+
         mockMvc.perform(post("/managemyapplications/{mail}/application/{applicationId}/update",
                         targetCandidate.getAppUser().getMail(),
                         savedTargetApplication.getId())
@@ -137,6 +154,13 @@ class CandidatePortalControllerIntegrationTest {
                         savedTargetApplication.getId())
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                         .session(ownerSession))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(post("/managemyapplications/{mail}/application/{applicationId}/offer/{offerId}/message",
+                        targetCandidate.getAppUser().getMail(), savedTargetApplication.getId(), 1)
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .session(ownerSession)
+                        .param("message", "Forbidden message"))
                 .andExpect(status().isForbidden());
 
         mockMvc.perform(post("/modifycandidateprofile")
@@ -255,6 +279,56 @@ class CandidatePortalControllerIntegrationTest {
                 .andExpect(redirectedUrl("/managemyapplications/" + candidate.getAppUser().getMail() + "?success=application-deleted"));
 
         assertFalse(applicationRepository.findById(savedApplication.getId()).isPresent());
+    }
+
+    @Test
+    void shouldAllowCandidateToSendManualMessageAndViewHistory() throws Exception {
+        String token = token();
+
+        Candidate candidate = seedCandidate("messages." + token + "@imt-atlantique.fr", "Candidate" + token);
+        Company company = seedCompany("company.messages." + token + "@imt-atlantique.fr", "Message Company " + token);
+
+        QualificationLevel sharedLevel = qualificationLevelRepository.findAll().stream()
+                .findFirst()
+                .orElseGet(() -> qualificationLevelRepository.save(new QualificationLevel("Fallback Message Level " + token, (short) 30)));
+        Sector sharedSector = sectorRepository.save(new Sector("Shared Sector " + token));
+
+        Application application = new Application("candidate-cv-" + token + ".pdf", candidate, sharedLevel);
+        application.getSectors().add(sharedSector);
+        Application savedApplication = applicationRepository.save(application);
+
+        JobOffer offer = new JobOffer("Message Offer " + token, "Offer description", company, sharedLevel);
+        offer.getSectors().add(sharedSector);
+        JobOffer savedOffer = jobOfferRepository.save(offer);
+
+        MockHttpSession candidateSession = buildSession(candidate.getAppUser().getMail(), AppUser.UserType.applicant);
+
+        mockMvc.perform(post("/managemyapplications/{mail}/application/{applicationId}/offer/{offerId}/message",
+                        candidate.getAppUser().getMail(), savedApplication.getId(), savedOffer.getId())
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .session(candidateSession)
+                        .param("message", "Manual message from candidate " + token))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/managemyapplications/" + candidate.getAppUser().getMail() + "/application/" + savedApplication.getId() + "/matches?success=manual-message-sent"));
+
+        String updatedMessage = "Updated message from candidate " + token;
+        mockMvc.perform(post("/managemyapplications/{mail}/application/{applicationId}/offer/{offerId}/message",
+                        candidate.getAppUser().getMail(), savedApplication.getId(), savedOffer.getId())
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .session(candidateSession)
+                        .param("message", updatedMessage))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/managemyapplications/" + candidate.getAppUser().getMail() + "/application/" + savedApplication.getId() + "/matches?success=manual-message-sent"));
+
+        String persistedMessage = messageToApplicationRepository
+                .findByApplicationIdAndJobOfferId(savedApplication.getId(), savedOffer.getId())
+                .orElseThrow()
+                .getMessage();
+        assertEquals(updatedMessage, persistedMessage);
+
+        mockMvc.perform(get("/managemyapplications/{mail}/messages", candidate.getAppUser().getMail())
+                        .session(candidateSession))
+                .andExpect(status().isOk());
     }
 
     private Candidate seedCandidate(String mail, String lastname) {

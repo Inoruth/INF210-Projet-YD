@@ -31,6 +31,7 @@ import fr.imt_atlantique.fip.inf210.jobmanagement.repository.ApplicationJpaRepos
 import fr.imt_atlantique.fip.inf210.jobmanagement.repository.CandidateJpaRepository;
 import fr.imt_atlantique.fip.inf210.jobmanagement.repository.CompanyJpaRepository;
 import fr.imt_atlantique.fip.inf210.jobmanagement.repository.JobOfferJpaRepository;
+import fr.imt_atlantique.fip.inf210.jobmanagement.repository.MessageToOfferJpaRepository;
 import fr.imt_atlantique.fip.inf210.jobmanagement.repository.QualificationLevelRepository;
 import fr.imt_atlantique.fip.inf210.jobmanagement.repository.SectorJpaRepository;
 
@@ -57,6 +58,9 @@ class CompanyPortalControllerIntegrationTest {
     @Autowired
     private ApplicationJpaRepository applicationRepository;
 
+        @Autowired
+        private MessageToOfferJpaRepository messageToOfferRepository;
+
     @Autowired
     private QualificationLevelRepository qualificationLevelRepository;
 
@@ -80,6 +84,9 @@ class CompanyPortalControllerIntegrationTest {
         mockMvc.perform(get("/managemyoffers/{mail}/offer/{offerId}/edit", "anonymous.company@imt-atlantique.fr", 1))
                 .andExpect(status().isUnauthorized());
 
+        mockMvc.perform(get("/managemyoffers/{mail}/messages", "anonymous.company@imt-atlantique.fr"))
+                .andExpect(status().isUnauthorized());
+
         mockMvc.perform(post("/managemyoffers/{mail}/offer/{offerId}/update", "anonymous.company@imt-atlantique.fr", 1)
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                         .param("title", "Unauthorized title")
@@ -90,6 +97,12 @@ class CompanyPortalControllerIntegrationTest {
 
         mockMvc.perform(post("/managemyoffers/{mail}/offer/{offerId}/delete", "anonymous.company@imt-atlantique.fr", 1)
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED))
+                .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(post("/managemyoffers/{mail}/offer/{offerId}/application/{applicationId}/message",
+                        "anonymous.company@imt-atlantique.fr", 1, 1)
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .param("message", "Unauthorized message"))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -121,6 +134,10 @@ class CompanyPortalControllerIntegrationTest {
                         .session(ownerSession))
                 .andExpect(status().isForbidden());
 
+        mockMvc.perform(get("/managemyoffers/{mail}/messages", targetCompany.getAppUser().getMail())
+                        .session(ownerSession))
+                .andExpect(status().isForbidden());
+
         mockMvc.perform(post("/managemyoffers/{mail}/offer/{offerId}/update", targetCompany.getAppUser().getMail(), savedTargetOffer.getId())
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                         .session(ownerSession)
@@ -133,6 +150,13 @@ class CompanyPortalControllerIntegrationTest {
         mockMvc.perform(post("/managemyoffers/{mail}/offer/{offerId}/delete", targetCompany.getAppUser().getMail(), savedTargetOffer.getId())
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                         .session(ownerSession))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(post("/managemyoffers/{mail}/offer/{offerId}/application/{applicationId}/message",
+                        targetCompany.getAppUser().getMail(), savedTargetOffer.getId(), 1)
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .session(ownerSession)
+                        .param("message", "Forbidden message"))
                 .andExpect(status().isForbidden());
 
         mockMvc.perform(post("/modifycompanyprofile")
@@ -253,6 +277,56 @@ class CompanyPortalControllerIntegrationTest {
                 .andExpect(redirectedUrl("/managemyoffers/" + company.getAppUser().getMail() + "?success=offer-deleted"));
 
         assertFalse(jobOfferRepository.findById(savedOffer.getId()).isPresent());
+    }
+
+    @Test
+    void shouldAllowCompanyToSendManualMessageAndViewHistory() throws Exception {
+        String token = token();
+
+        Company company = seedCompany("messages." + token + "@imt-atlantique.fr", "Messages Corp " + token);
+        Candidate candidate = seedCandidate("candidate.messages." + token + "@imt-atlantique.fr", "Candidate" + token);
+
+        QualificationLevel sharedLevel = qualificationLevelRepository.findAll().stream()
+                .findFirst()
+                .orElseGet(() -> qualificationLevelRepository.save(new QualificationLevel("Fallback Message Level " + token, (short) 30)));
+        Sector sharedSector = sectorRepository.save(new Sector("Shared Sector " + token));
+
+        JobOffer offer = new JobOffer("Messaging offer " + token, "Offer description", company, sharedLevel);
+        offer.getSectors().add(sharedSector);
+        JobOffer savedOffer = jobOfferRepository.save(offer);
+
+        Application application = new Application("cv-message-" + token + ".pdf", candidate, sharedLevel);
+        application.getSectors().add(sharedSector);
+        Application savedApplication = applicationRepository.save(application);
+
+        MockHttpSession companySession = buildSession(company.getAppUser().getMail(), AppUser.UserType.company);
+
+        mockMvc.perform(post("/managemyoffers/{mail}/offer/{offerId}/application/{applicationId}/message",
+                        company.getAppUser().getMail(), savedOffer.getId(), savedApplication.getId())
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .session(companySession)
+                        .param("message", "Manual message from company " + token))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/managemyoffers/" + company.getAppUser().getMail() + "/offer/" + savedOffer.getId() + "/matches?success=manual-message-sent"));
+
+        String updatedMessage = "Updated message from company " + token;
+        mockMvc.perform(post("/managemyoffers/{mail}/offer/{offerId}/application/{applicationId}/message",
+                        company.getAppUser().getMail(), savedOffer.getId(), savedApplication.getId())
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .session(companySession)
+                        .param("message", updatedMessage))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/managemyoffers/" + company.getAppUser().getMail() + "/offer/" + savedOffer.getId() + "/matches?success=manual-message-sent"));
+
+        String persistedMessage = messageToOfferRepository
+                .findByJobOfferIdAndApplicationId(savedOffer.getId(), savedApplication.getId())
+                .orElseThrow()
+                .getMessage();
+        assertEquals(updatedMessage, persistedMessage);
+
+        mockMvc.perform(get("/managemyoffers/{mail}/messages", company.getAppUser().getMail())
+                        .session(companySession))
+                .andExpect(status().isOk());
     }
 
     private Company seedCompany(String mail, String denomination) {

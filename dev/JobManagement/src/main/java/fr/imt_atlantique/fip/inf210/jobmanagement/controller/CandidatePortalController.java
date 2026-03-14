@@ -7,6 +7,7 @@ package fr.imt_atlantique.fip.inf210.jobmanagement.controller;
  * Les verifications d acces appliquent le role et la propriete des ressources.
  */
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
@@ -28,6 +29,8 @@ import fr.imt_atlantique.fip.inf210.jobmanagement.entity.AppUser;
 import fr.imt_atlantique.fip.inf210.jobmanagement.entity.Application;
 import fr.imt_atlantique.fip.inf210.jobmanagement.entity.Candidate;
 import fr.imt_atlantique.fip.inf210.jobmanagement.entity.JobOffer;
+import fr.imt_atlantique.fip.inf210.jobmanagement.entity.MessageToApplication;
+import fr.imt_atlantique.fip.inf210.jobmanagement.entity.MessageToOffer;
 import fr.imt_atlantique.fip.inf210.jobmanagement.entity.QualificationLevel;
 import fr.imt_atlantique.fip.inf210.jobmanagement.entity.Sector;
 import fr.imt_atlantique.fip.inf210.jobmanagement.repository.QualificationLevelRepository;
@@ -35,6 +38,8 @@ import fr.imt_atlantique.fip.inf210.jobmanagement.repository.SectorJpaRepository
 import fr.imt_atlantique.fip.inf210.jobmanagement.service.ApplicationService;
 import fr.imt_atlantique.fip.inf210.jobmanagement.service.CandidateService;
 import fr.imt_atlantique.fip.inf210.jobmanagement.service.JobOfferService;
+import fr.imt_atlantique.fip.inf210.jobmanagement.service.MessageToApplicationService;
+import fr.imt_atlantique.fip.inf210.jobmanagement.service.MessageToOfferService;
 import fr.imt_atlantique.fip.inf210.jobmanagement.service.QualificationLevelService;
 import fr.imt_atlantique.fip.inf210.jobmanagement.service.SectorService;
 import jakarta.servlet.http.HttpSession;
@@ -45,6 +50,8 @@ public class CandidatePortalController {
     private final CandidateService candidateService;
     private final ApplicationService applicationService;
     private final JobOfferService jobOfferService;
+    private final MessageToOfferService messageToOfferService;
+    private final MessageToApplicationService messageToApplicationService;
     private final SectorService sectorService;
     private final QualificationLevelService qualificationLevelService;
     private final SectorJpaRepository sectorRepository;
@@ -53,6 +60,8 @@ public class CandidatePortalController {
     public CandidatePortalController(CandidateService candidateService,
                                      ApplicationService applicationService,
                                      JobOfferService jobOfferService,
+                                     MessageToOfferService messageToOfferService,
+                                     MessageToApplicationService messageToApplicationService,
                                      SectorService sectorService,
                                      QualificationLevelService qualificationLevelService,
                                      SectorJpaRepository sectorRepository,
@@ -60,6 +69,8 @@ public class CandidatePortalController {
         this.candidateService = candidateService;
         this.applicationService = applicationService;
         this.jobOfferService = jobOfferService;
+        this.messageToOfferService = messageToOfferService;
+        this.messageToApplicationService = messageToApplicationService;
         this.sectorService = sectorService;
         this.qualificationLevelService = qualificationLevelService;
         this.sectorRepository = sectorRepository;
@@ -209,6 +220,58 @@ public class CandidatePortalController {
         return "redirect:/managemyapplications/" + mail + "?success=application-deleted";
     }
 
+    // Affiche l historique des messages envoyes/recus du candidat.
+    @GetMapping("/managemyapplications/{mail:.+}/messages")
+    public ModelAndView getCandidateMessages(@PathVariable String mail, HttpSession session) {
+        requireCandidateOwnerOrAdmin(session, mail);
+
+        Candidate candidate = findCandidateOrThrow(mail);
+        List<MessageToApplication> sentMessages = messageToApplicationService.findByCandidateId(candidate.getId());
+        List<MessageToOffer> receivedMessages = messageToOfferService.findByCandidateId(candidate.getId());
+
+        ModelAndView mav = new ModelAndView("candidatemessagestab.html");
+        mav.addObject("candidate", candidate);
+        mav.addObject("sentMessages", sentMessages);
+        mav.addObject("receivedMessages", receivedMessages);
+        return mav;
+    }
+
+    // Envoie un message manuel du candidat vers une entreprise sur une paire candidature/offre.
+    @PostMapping("/managemyapplications/{mail:.+}/application/{applicationId}/offer/{offerId}/message")
+    public String sendManualMessageToCompany(@PathVariable String mail,
+                                              @PathVariable Integer applicationId,
+                                              @PathVariable Integer offerId,
+                                              @RequestParam("message") String message,
+                                              HttpSession session) {
+        requireCandidateOwnerOrAdmin(session, mail);
+
+        Candidate candidate = findCandidateOrThrow(mail);
+        Application application = applicationService.findByIdAndCandidateId(applicationId, candidate.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Application not found for this candidate"));
+
+        JobOffer offer = findMatchingOfferForApplicationOrThrow(application.getId(), offerId);
+
+        String normalizedMessage = normalizeRequiredText(message);
+        if (normalizedMessage.isEmpty()) {
+            return "redirect:/managemyapplications/" + mail + "/application/" + applicationId + "/matches?error=message-required";
+        }
+        if (normalizedMessage.length() > 4000) {
+            return "redirect:/managemyapplications/" + mail + "/application/" + applicationId + "/matches?error=message-too-long";
+        }
+
+        MessageToApplication messageToApplication = messageToApplicationService
+                .findByApplicationAndJobOffer(applicationId, offerId)
+                .orElseGet(() -> new MessageToApplication(normalizedMessage, application, offer));
+
+        messageToApplication.setApplication(application);
+        messageToApplication.setJobOffer(offer);
+        messageToApplication.setMessage(normalizedMessage);
+        messageToApplication.setPublicationdate(LocalDate.now());
+        messageToApplicationService.save(messageToApplication);
+
+        return "redirect:/managemyapplications/" + mail + "/application/" + applicationId + "/matches?success=manual-message-sent";
+    }
+
     // Ouvre le formulaire de modification du profil candidat.
     @GetMapping("/modifycandidateprofile/{mail:.+}")
     public ModelAndView getModifyCandidateProfile(@PathVariable String mail, HttpSession session) {
@@ -278,6 +341,14 @@ public class CandidatePortalController {
         mav.addObject("jobApplication", ownedApplication);
         mav.addObject("offers", offers);
         return mav;
+    }
+
+    private JobOffer findMatchingOfferForApplicationOrThrow(Integer applicationId, Integer offerId) {
+        return jobOfferService.findMatchingByApplicationId(applicationId).stream()
+                .filter(offer -> offer.getId() != null)
+                .filter(offer -> offer.getId().equals(offerId))
+                .findFirst()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Job offer not found for this application"));
     }
 
     private Candidate findCandidateOrThrow(String mail) {

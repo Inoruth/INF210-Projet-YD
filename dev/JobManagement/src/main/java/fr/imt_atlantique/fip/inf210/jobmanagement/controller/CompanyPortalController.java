@@ -7,6 +7,7 @@ package fr.imt_atlantique.fip.inf210.jobmanagement.controller;
  * Les verifications d acces appliquent le role et la propriete des ressources.
  */
 
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
@@ -28,6 +29,8 @@ import fr.imt_atlantique.fip.inf210.jobmanagement.entity.AppUser;
 import fr.imt_atlantique.fip.inf210.jobmanagement.entity.Application;
 import fr.imt_atlantique.fip.inf210.jobmanagement.entity.Company;
 import fr.imt_atlantique.fip.inf210.jobmanagement.entity.JobOffer;
+import fr.imt_atlantique.fip.inf210.jobmanagement.entity.MessageToApplication;
+import fr.imt_atlantique.fip.inf210.jobmanagement.entity.MessageToOffer;
 import fr.imt_atlantique.fip.inf210.jobmanagement.entity.QualificationLevel;
 import fr.imt_atlantique.fip.inf210.jobmanagement.entity.Sector;
 import fr.imt_atlantique.fip.inf210.jobmanagement.repository.QualificationLevelRepository;
@@ -35,6 +38,8 @@ import fr.imt_atlantique.fip.inf210.jobmanagement.repository.SectorJpaRepository
 import fr.imt_atlantique.fip.inf210.jobmanagement.service.ApplicationService;
 import fr.imt_atlantique.fip.inf210.jobmanagement.service.CompanyService;
 import fr.imt_atlantique.fip.inf210.jobmanagement.service.JobOfferService;
+import fr.imt_atlantique.fip.inf210.jobmanagement.service.MessageToApplicationService;
+import fr.imt_atlantique.fip.inf210.jobmanagement.service.MessageToOfferService;
 import fr.imt_atlantique.fip.inf210.jobmanagement.service.QualificationLevelService;
 import fr.imt_atlantique.fip.inf210.jobmanagement.service.SectorService;
 import jakarta.servlet.http.HttpSession;
@@ -45,6 +50,8 @@ public class CompanyPortalController {
     private final CompanyService companyService;
     private final JobOfferService jobOfferService;
     private final ApplicationService applicationService;
+    private final MessageToOfferService messageToOfferService;
+    private final MessageToApplicationService messageToApplicationService;
     private final SectorService sectorService;
     private final QualificationLevelService qualificationLevelService;
     private final SectorJpaRepository sectorRepository;
@@ -53,6 +60,8 @@ public class CompanyPortalController {
     public CompanyPortalController(CompanyService companyService,
                                    JobOfferService jobOfferService,
                                    ApplicationService applicationService,
+                                   MessageToOfferService messageToOfferService,
+                                   MessageToApplicationService messageToApplicationService,
                                    SectorService sectorService,
                                    QualificationLevelService qualificationLevelService,
                                    SectorJpaRepository sectorRepository,
@@ -60,6 +69,8 @@ public class CompanyPortalController {
         this.companyService = companyService;
         this.jobOfferService = jobOfferService;
         this.applicationService = applicationService;
+        this.messageToOfferService = messageToOfferService;
+        this.messageToApplicationService = messageToApplicationService;
         this.sectorService = sectorService;
         this.qualificationLevelService = qualificationLevelService;
         this.sectorRepository = sectorRepository;
@@ -228,6 +239,58 @@ public class CompanyPortalController {
         return "redirect:/managemyoffers/" + mail + "?success=offer-deleted";
     }
 
+    // Affiche l historique des messages envoyes/recus de l entreprise.
+    @GetMapping("/managemyoffers/{mail:.+}/messages")
+    public ModelAndView getCompanyMessages(@PathVariable String mail, HttpSession session) {
+        requireCompanyOwnerOrAdmin(session, mail);
+
+        Company company = findCompanyOrThrow(mail);
+        List<MessageToOffer> sentMessages = messageToOfferService.findByCompanyId(company.getId());
+        List<MessageToApplication> receivedMessages = messageToApplicationService.findByCompanyId(company.getId());
+
+        ModelAndView mav = new ModelAndView("companymessagestab.html");
+        mav.addObject("company", company);
+        mav.addObject("sentMessages", sentMessages);
+        mav.addObject("receivedMessages", receivedMessages);
+        return mav;
+    }
+
+    // Envoie un message manuel de l entreprise vers un candidat sur une paire offre/candidature.
+    @PostMapping("/managemyoffers/{mail:.+}/offer/{offerId}/application/{applicationId}/message")
+    public String sendManualMessageToCandidate(@PathVariable String mail,
+                                               @PathVariable Integer offerId,
+                                               @PathVariable Integer applicationId,
+                                               @RequestParam("message") String message,
+                                               HttpSession session) {
+        requireCompanyOwnerOrAdmin(session, mail);
+
+        Company company = findCompanyOrThrow(mail);
+        JobOffer offer = jobOfferService.findByIdAndCompanyId(offerId, company.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Job offer not found for this company"));
+
+        Application jobApplication = findMatchingApplicationForOfferOrThrow(offer.getId(), applicationId);
+
+        String normalizedMessage = normalizeRequiredText(message);
+        if (normalizedMessage.isEmpty()) {
+            return "redirect:/managemyoffers/" + mail + "/offer/" + offerId + "/matches?error=message-required";
+        }
+        if (normalizedMessage.length() > 4000) {
+            return "redirect:/managemyoffers/" + mail + "/offer/" + offerId + "/matches?error=message-too-long";
+        }
+
+        MessageToOffer messageToOffer = messageToOfferService
+                .findByJobOfferAndApplication(offerId, applicationId)
+                .orElseGet(() -> new MessageToOffer(normalizedMessage, offer, jobApplication));
+
+        messageToOffer.setJobOffer(offer);
+        messageToOffer.setApplication(jobApplication);
+        messageToOffer.setMessage(normalizedMessage);
+        messageToOffer.setPublicationdate(LocalDate.now());
+        messageToOfferService.save(messageToOffer);
+
+        return "redirect:/managemyoffers/" + mail + "/offer/" + offerId + "/matches?success=manual-message-sent";
+    }
+
     // Ouvre le formulaire de modification du profil entreprise.
     @GetMapping("/modifycompanyprofile/{mail:.+}")
     public ModelAndView getModifyCompanyProfile(@PathVariable String mail, HttpSession session) {
@@ -292,6 +355,14 @@ public class CompanyPortalController {
         mav.addObject("offer", ownedOffer);
         mav.addObject("applications", matchingApplications);
         return mav;
+    }
+
+    private Application findMatchingApplicationForOfferOrThrow(Integer offerId, Integer applicationId) {
+        return applicationService.findMatchingByJobOfferId(offerId).stream()
+                .filter(application -> application.getId() != null)
+                .filter(application -> application.getId().equals(applicationId))
+                .findFirst()
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Application not found for this offer"));
     }
 
     private Company findCompanyOrThrow(String mail) {

@@ -43,6 +43,8 @@
                 <a class="btn btn-outline-primary"
                    th:href="@{/modifycandidateprofile/{mail}(mail=${candidate.appUser.mail})}">Edit profile</a>
                 <a class="btn btn-primary" href="/publishapplication">Publish a new application</a>
+                <a class="btn btn-outline-secondary"
+                   th:href="@{/managemyapplications/{mail}/messages(mail=${candidate.appUser.mail})}">My messages</a>
             </div>
         </div>
     </div>

@@ -10,6 +10,15 @@
 
     <ul th:replace="fragments :: mainNavigation(null, null, null, 'active', null, null, null)"></ul>
 
+    <div th:if="${param.success != null}" class="alert alert-success">
+        <span th:if="${param.success[0] == 'manual-message-sent'}">Message sent to candidate successfully.</span>
+    </div>
+
+    <div th:if="${param.error != null}" class="alert alert-danger">
+        <span th:if="${param.error[0] == 'message-required'}">Message is required.</span>
+        <span th:if="${param.error[0] == 'message-too-long'}">Message must not exceed 4000 characters.</span>
+    </div>
+
     <div class="card shadow-sm mb-4">
         <div class="card-body">
             <h5 class="card-title mb-3">Offer summary</h5>
@@ -54,11 +63,12 @@
                         <th>Qualification</th>
                         <th>Date</th>
                         <th>Details</th>
+                        <th>Message</th>
                     </tr>
                     </thead>
                     <tbody>
                     <tr th:if="${#lists.isEmpty(applications)}">
-                        <td colspan="6" class="text-center text-muted">No matching application found for this offer.</td>
+                        <td colspan="7" class="text-center text-muted">No matching application found for this offer.</td>
                     </tr>
                     <tr th:each="jobApplication : ${applications}">
                         <td th:text="${jobApplication.id}"></td>
@@ -76,6 +86,14 @@
                         <td th:text="${jobApplication.appdate}"></td>
                         <td>
                             <a class="btn btn-sm btn-outline-primary" th:href="@{/application/{id}(id=${jobApplication.id})}">View</a>
+                        </td>
+                        <td>
+                            <form method="POST"
+                                  th:action="@{/managemyoffers/{mail}/offer/{offerId}/application/{applicationId}/message(mail=${company.appUser.mail},offerId=${offer.id},applicationId=${jobApplication.id})}">
+                                <textarea class="form-control form-control-sm" name="message" rows="2" maxlength="4000"
+                                          placeholder="Write a message to this candidate" required></textarea>
+                                <button type="submit" class="btn btn-sm btn-outline-success mt-2">Send</button>
+                            </form>
                         </td>
                     </tr>
                     </tbody>

@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments :: head('Company Messages')"></head>
+<body>
+
+<nav th:replace="fragments :: navbar"></nav>
+
+<div class="container">
+    <header th:replace="fragments :: pageHeader('Company Messages', 'Review messages sent to and received from candidates')"></header>
+
+    <ul th:replace="fragments :: mainNavigation(null, null, null, 'active', null, null, null)"></ul>
+
+    <div class="d-flex gap-2 mb-4">
+        <a class="btn btn-secondary" th:href="@{/managemyoffers/{mail}(mail=${company.appUser.mail})}">Back to my offers</a>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Messages sent to candidates</h5>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle">
+                    <thead class="table-primary">
+                    <tr>
+                        <th>Date</th>
+                        <th>Offer</th>
+                        <th>Candidate</th>
+                        <th>Application</th>
+                        <th>Message</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(sentMessages)}">
+                        <td colspan="5" class="text-center text-muted">No sent message yet.</td>
+                    </tr>
+                    <tr th:each="message : ${sentMessages}">
+                        <td th:text="${message.publicationdate}"></td>
+                        <td>
+                            <a th:href="@{/job/{id}(id=${message.jobOffer.id})}"
+                               th:text="${'#' + message.jobOffer.id + ' - ' + message.jobOffer.title}"></a>
+                        </td>
+                        <td>
+                            <a th:href="@{/candidate/{mail}(mail=${message.application.candidate.appUser.mail})}"
+                               th:text="${message.application.candidate.appUser.mail}"></a>
+                        </td>
+                        <td>
+                            <a th:href="@{/application/{id}(id=${message.application.id})}"
+                               th:text="${'#' + message.application.id}"></a>
+                        </td>
+                        <td th:text="${message.message}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Messages received from candidates</h5>
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle">
+                    <thead class="table-primary">
+                    <tr>
+                        <th>Date</th>
+                        <th>Candidate</th>
+                        <th>Application</th>
+                        <th>Offer</th>
+                        <th>Message</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(receivedMessages)}">
+                        <td colspan="5" class="text-center text-muted">No received message yet.</td>
+                    </tr>
+                    <tr th:each="message : ${receivedMessages}">
+                        <td th:text="${message.publicationdate}"></td>
+                        <td>
+                            <a th:href="@{/candidate/{mail}(mail=${message.application.candidate.appUser.mail})}"
+                               th:text="${message.application.candidate.appUser.mail}"></a>
+                        </td>
+                        <td>
+                            <a th:href="@{/application/{id}(id=${message.application.id})}"
+                               th:text="${'#' + message.application.id}"></a>
+                        </td>
+                        <td>
+                            <a th:href="@{/job/{id}(id=${message.jobOffer.id})}"
+                               th:text="${'#' + message.jobOffer.id + ' - ' + message.jobOffer.title}"></a>
+                        </td>
+                        <td th:text="${message.message}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="fragments :: loginModal"></div>
+<th:block th:replace="fragments :: scripts"></th:block>
+</body>
+</html>
