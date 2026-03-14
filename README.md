@@ -59,6 +59,11 @@ cd dev
 docker compose up -d db
 ```
 
+The first startup automatically:
+
+- creates database `jobmanagement_db`,
+- loads `create_db_jobmanagement.sql` (schema + seed users).
+
 2. Start the application:
 
 ```powershell
@@ -121,6 +126,18 @@ Expected current status:
 
 - `mvn test` -> BUILD SUCCESS, 168 tests run, 0 failure, 0 error.
 - packaged jar generated in `dev/JobManagement/target/`.
+
+## Troubleshooting
+
+If you see an error like `database "jobmanagement_db" does not exist`, your local Docker data may come from an older setup.
+
+Reset and reinitialize the database:
+
+```powershell
+cd dev
+docker compose down -v
+docker compose up -d db
+```
 
 ## Delivery documents
 
