@@ -314,9 +314,10 @@ class CompanyPortalControllerIntegrationTest {
                         company.getAppUser().getMail(), savedOffer.getId(), savedApplication.getId())
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                         .session(companySession)
-                        .param("message", updatedMessage))
+                        .param("message", updatedMessage)
+                        .param("origin", "messages"))
                 .andExpect(status().is3xxRedirection())
-                .andExpect(redirectedUrl("/managemyoffers/" + company.getAppUser().getMail() + "/offer/" + savedOffer.getId() + "/matches?success=manual-message-sent"));
+                .andExpect(redirectedUrl("/managemyoffers/" + company.getAppUser().getMail() + "/messages?success=manual-message-sent"));
 
         String persistedMessage = messageToOfferRepository
                 .findByJobOfferIdAndApplicationId(savedOffer.getId(), savedApplication.getId())

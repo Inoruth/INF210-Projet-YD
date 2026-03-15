@@ -242,6 +242,7 @@ public class CandidatePortalController {
                                               @PathVariable Integer applicationId,
                                               @PathVariable Integer offerId,
                                               @RequestParam("message") String message,
+                                              @RequestParam(name = "origin", required = false) String origin,
                                               HttpSession session) {
         requireCandidateOwnerOrAdmin(session, mail);
 
@@ -253,10 +254,10 @@ public class CandidatePortalController {
 
         String normalizedMessage = normalizeRequiredText(message);
         if (normalizedMessage.isEmpty()) {
-            return "redirect:/managemyapplications/" + mail + "/application/" + applicationId + "/matches?error=message-required";
+            return buildCandidateManualMessageRedirect(mail, applicationId, origin, "error=message-required");
         }
         if (normalizedMessage.length() > 4000) {
-            return "redirect:/managemyapplications/" + mail + "/application/" + applicationId + "/matches?error=message-too-long";
+            return buildCandidateManualMessageRedirect(mail, applicationId, origin, "error=message-too-long");
         }
 
         MessageToApplication messageToApplication = messageToApplicationService
@@ -269,7 +270,7 @@ public class CandidatePortalController {
         messageToApplication.setPublicationdate(LocalDate.now());
         messageToApplicationService.save(messageToApplication);
 
-        return "redirect:/managemyapplications/" + mail + "/application/" + applicationId + "/matches?success=manual-message-sent";
+        return buildCandidateManualMessageRedirect(mail, applicationId, origin, "success=manual-message-sent");
     }
 
     // Ouvre le formulaire de modification du profil candidat.
@@ -389,6 +390,13 @@ public class CandidatePortalController {
         }
         String normalized = value.trim();
         return normalized.isEmpty() ? null : normalized;
+    }
+
+    private String buildCandidateManualMessageRedirect(String mail, Integer applicationId, String origin, String query) {
+        if ("messages".equalsIgnoreCase(origin)) {
+            return "redirect:/managemyapplications/" + mail + "/messages?" + query;
+        }
+        return "redirect:/managemyapplications/" + mail + "/application/" + applicationId + "/matches?" + query;
     }
 
     private void requireCandidateOwnerOrAdmin(HttpSession session, String targetMail) {

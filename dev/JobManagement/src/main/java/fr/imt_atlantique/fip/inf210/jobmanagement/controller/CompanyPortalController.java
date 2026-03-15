@@ -261,6 +261,7 @@ public class CompanyPortalController {
                                                @PathVariable Integer offerId,
                                                @PathVariable Integer applicationId,
                                                @RequestParam("message") String message,
+                                               @RequestParam(name = "origin", required = false) String origin,
                                                HttpSession session) {
         requireCompanyOwnerOrAdmin(session, mail);
 
@@ -272,10 +273,10 @@ public class CompanyPortalController {
 
         String normalizedMessage = normalizeRequiredText(message);
         if (normalizedMessage.isEmpty()) {
-            return "redirect:/managemyoffers/" + mail + "/offer/" + offerId + "/matches?error=message-required";
+            return buildCompanyManualMessageRedirect(mail, offerId, origin, "error=message-required");
         }
         if (normalizedMessage.length() > 4000) {
-            return "redirect:/managemyoffers/" + mail + "/offer/" + offerId + "/matches?error=message-too-long";
+            return buildCompanyManualMessageRedirect(mail, offerId, origin, "error=message-too-long");
         }
 
         MessageToOffer messageToOffer = messageToOfferService
@@ -288,7 +289,7 @@ public class CompanyPortalController {
         messageToOffer.setPublicationdate(LocalDate.now());
         messageToOfferService.save(messageToOffer);
 
-        return "redirect:/managemyoffers/" + mail + "/offer/" + offerId + "/matches?success=manual-message-sent";
+        return buildCompanyManualMessageRedirect(mail, offerId, origin, "success=manual-message-sent");
     }
 
     // Ouvre le formulaire de modification du profil entreprise.
@@ -403,6 +404,13 @@ public class CompanyPortalController {
         }
         String normalized = value.trim();
         return normalized.isEmpty() ? null : normalized;
+    }
+
+    private String buildCompanyManualMessageRedirect(String mail, Integer offerId, String origin, String query) {
+        if ("messages".equalsIgnoreCase(origin)) {
+            return "redirect:/managemyoffers/" + mail + "/messages?" + query;
+        }
+        return "redirect:/managemyoffers/" + mail + "/offer/" + offerId + "/matches?" + query;
     }
 
     private void requireCompanyOwnerOrAdmin(HttpSession session, String targetMail) {

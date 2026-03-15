@@ -57,7 +57,7 @@ Branche: partie3
 ## Verification technique globale
 
 - `mvn clean`: BUILD SUCCESS.
-- `mvn test`: BUILD SUCCESS, 168 tests, 0 failure, 0 error.
+- `mvn test`: BUILD SUCCESS, 207 tests, 0 failure, 0 error.
 - `mvn package -DskipTests`: BUILD SUCCESS, jar genere.
 
 ## Point d attention avant rendu
